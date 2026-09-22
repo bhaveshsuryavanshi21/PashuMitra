@@ -238,14 +238,12 @@ def create_report(report: dict):
         }
 
     except Exception as e:
+    print("REPORT DATABASE ERROR:", repr(e))
 
-        if conn:
-            conn.rollback()
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {str(e)}"
-        )
+    raise HTTPException(
+        status_code=500,
+        detail=f"Database error: {str(e)}"
+    )
 
     finally:
 
