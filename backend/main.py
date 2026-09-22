@@ -30,21 +30,19 @@ app.add_middleware(
 # DATABASE
 # --------------------------------------------------
 
-DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DB_PASSWORD:
+if not DATABASE_URL:
     raise RuntimeError(
-        "POSTGRES_PASSWORD is not configured in .env"
+        "DATABASE_URL is not configured in .env"
     )
 
 
 def get_connection():
-    return psycopg2.connect(
-        host="localhost",
-        database="pashumitra",
-        user="postgres",
-        password=DB_PASSWORD
-    )
+    # Supabase PostgreSQL connection.
+    # The connection string copied from Supabase already includes
+    # the required connection details.
+    return psycopg2.connect(DATABASE_URL)
 
 
 # --------------------------------------------------
