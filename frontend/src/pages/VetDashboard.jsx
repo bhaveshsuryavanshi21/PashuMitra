@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-
+import API_BASE_URL from "../config";
 function VetDashboard({ language }) {
   const [reports, setReports] = useState([])
   const [selectedReport, setSelectedReport] = useState(null)
@@ -165,7 +165,7 @@ function VetDashboard({ language }) {
   const t = translations[language] || translations.en
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/reports')
+    fetch(`${API_BASE_URL}/reports`)
       .then((response) => response.json())
       .then((data) => {
         setReports(data)
@@ -221,7 +221,7 @@ function VetDashboard({ language }) {
 
   const updateStatus = (reportId, newStatus) => {
     fetch(
-      `http://127.0.0.1:8000/report/${reportId}/status`,
+      `${API_BASE_URL}/report/${reportId}/status`,
       {
         method: 'PUT',
         headers: {
@@ -263,7 +263,7 @@ function VetDashboard({ language }) {
 
   const assignVet = (reportId, vet) => {
     fetch(
-      `http://127.0.0.1:8000/report/${reportId}/vet`,
+      `${API_BASE_URL}/report/${reportId}/vet`,
       {
         method: 'PUT',
         headers: {
@@ -305,7 +305,7 @@ function VetDashboard({ language }) {
 
   const updateTreatment = (reportId, treatment) => {
     fetch(
-      `http://127.0.0.1:8000/report/${reportId}/treatment`,
+      `${API_BASE_URL}/report/${reportId}/treatment`,
       {
         method: 'PUT',
         headers: {

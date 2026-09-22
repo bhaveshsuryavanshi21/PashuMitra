@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import API_BASE_URL from "../config";
 
 function HealthRecords({ language }) {
   const [reports, setReports] = useState([])
@@ -183,7 +184,7 @@ function HealthRecords({ language }) {
         setLoading(true)
 
         const response = await fetch(
-          'http://127.0.0.1:8000/reports'
+          `${API_BASE_URL}/reports`
         )
 
         if (!response.ok) {
@@ -417,9 +418,8 @@ function HealthRecords({ language }) {
   const updateVaccination = (
     reportId,
     value
-  ) => {
-    fetch(
-      `http://127.0.0.1:8000/report/${reportId}/vaccination`,
+  ) => {fetch(
+  `${API_BASE_URL}/report/${reportId}/vaccination`,
       {
         method: 'PUT',
         headers: {

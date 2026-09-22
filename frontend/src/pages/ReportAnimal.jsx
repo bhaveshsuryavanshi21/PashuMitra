@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import API_BASE_URL from "../config";
 
 function ReportAnimal({ language }) {
   const translations = {
@@ -255,8 +256,7 @@ function ReportAnimal({ language }) {
   // =========================
 
   const sendReport = async (report) => {
-    const response = await fetch(
-      'http://127.0.0.1:8000/report',
+    const response = await fetch(`${API_BASE_URL}/report`,
       {
         method: 'POST',
         headers: {

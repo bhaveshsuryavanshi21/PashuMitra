@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import API_BASE_URL from "../config";
 import {
   MapContainer,
   TileLayer,
@@ -266,7 +267,7 @@ function OutbreakMap({ language }) {
   useEffect(() => {
     setLoading(true)
 
-    fetch('http://127.0.0.1:8000/reports')
+    fetch(`${API_BASE_URL}/reports`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to fetch reports')
@@ -326,7 +327,7 @@ function OutbreakMap({ language }) {
         setWeatherError('')
 
         const response = await fetch(
-          `http://127.0.0.1:8000/weather?lat=${latitude}&lon=${longitude}`
+          `${API_BASE_URL}/weather?lat=${latitude}&lon=${longitude}`
         )
 
         if (!response.ok) {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import API_BASE_URL from "../config";
 
 const VETERINARY_TEAM_PHONE = '+916261349321'
 
@@ -304,7 +305,7 @@ function FarmerDashboard({ language }) {
         setLoading(true)
 
         const response = await fetch(
-          'http://127.0.0.1:8000/reports'
+          '`${API_BASE_URL}/reports`'
         )
 
         if (!response.ok) {
@@ -370,7 +371,7 @@ function FarmerDashboard({ language }) {
         setWeatherError('')
 
         const response = await fetch(
-          `http://127.0.0.1:8000/weather?lat=${latitude}&lon=${longitude}`
+          `${API_BASE_URL}/weather?lat=${latitude}&lon=${longitude}`
         )
 
         if (!response.ok) {

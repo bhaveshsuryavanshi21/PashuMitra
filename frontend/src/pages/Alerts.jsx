@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import API_BASE_URL from "../config";
 
 function Alerts({ language }) {
   const [reports, setReports] = useState([])
@@ -196,7 +197,7 @@ function Alerts({ language }) {
     }
 
     const fetchReports = () => {
-      fetch('http://127.0.0.1:8000/reports')
+      fetch(`${API_BASE_URL}/reports`)
         .then((response) => {
           if (!response.ok) {
             throw new Error('Failed to fetch reports')
