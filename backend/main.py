@@ -238,9 +238,9 @@ def create_report(report: dict):
         }
 
     except Exception as e:
-    print("REPORT DATABASE ERROR:", repr(e))
+       print("REPORT DATABASE ERROR:", repr(e))
 
-    raise HTTPException(
+       raise HTTPException(
         status_code=500,
         detail=f"Database error: {str(e)}"
     )
