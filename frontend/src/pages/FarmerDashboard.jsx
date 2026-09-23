@@ -305,8 +305,8 @@ function FarmerDashboard({ language }) {
         setLoading(true)
 
         const response = await fetch(
-          '`${API_BASE_URL}/reports`'
-        )
+  `${API_BASE_URL}/reports`
+)
 
         if (!response.ok) {
           throw new Error('Failed to fetch reports')
