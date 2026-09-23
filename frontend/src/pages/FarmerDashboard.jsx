@@ -302,7 +302,7 @@ function FarmerDashboard({ language }) {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        setLoading(true)
+        setLoading(false)
 
         const response = await fetch(
   `${API_BASE_URL}/reports`
@@ -329,12 +329,6 @@ function FarmerDashboard({ language }) {
 
     fetchReports()
 
-    const interval = setInterval(
-      fetchReports,
-      10000
-    )
-
-    return () => clearInterval(interval)
   }, [])
 
   // =========================================================

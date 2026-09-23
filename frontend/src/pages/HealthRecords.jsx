@@ -4,6 +4,7 @@ import API_BASE_URL from "../config";
 function HealthRecords({ language }) {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const translations = {
     en: {
@@ -213,13 +214,8 @@ function HealthRecords({ language }) {
 
     fetchRecords()
 
-    const interval = setInterval(
-      fetchRecords,
-      10000
-    )
-
-    return () => clearInterval(interval)
-  }, [])
+  
+  }, [refreshKey])
 
   // ==========================================
   // ANIMAL
@@ -507,6 +503,14 @@ function HealthRecords({ language }) {
               <p className="text-slate-500 mt-1">
                 {t.description}
               </p>
+
+              <button
+                type="button"
+                onClick={() => setRefreshKey((prev) => prev + 1)}
+                className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                🔄 Refresh Records
+              </button>
 
             </div>
 

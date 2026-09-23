@@ -31,7 +31,7 @@ app.add_middleware(
 # DATABASE
 # --------------------------------------------------
 
-DATABASE_URL = os.getenv("DATABASE_URL=postgresql://postgres.sughjmnwidwfbxqzbirv:7OrGUZz0CZ02WZtJ@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError(
