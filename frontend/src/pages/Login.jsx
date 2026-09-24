@@ -1,8 +1,12 @@
 import { useState } from 'react'
+import { supabase } from '../supabaseClient'
+
 
 function Login({ onLogin }) {
   const [role, setRole] = useState('farmer')
   const [language, setLanguage] = useState('en')
+  const [email, setEmail] = useState('')
+const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
   const translations = {
@@ -90,20 +94,44 @@ function Login({ onLogin }) {
 
   const t = translations[language] || translations.en
 
-  const handleLogin = (e) => {
-    e.preventDefault()
-    onLogin(role, language)
+  const handleLogin = async (e) => {
+  e.preventDefault()
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) {
+    alert(error.message)
+    return
   }
+
+  onLogin(role, language)
+}
 
   const handleDemo = () => {
     onLogin('farmer', language)
   }
 
-  const handleGoogle = () => {
-    // UI placeholder for Google authentication.
-    // Real Google OAuth will be connected later.
-    onLogin(role, language)
+  const handleGoogle = async () => {
+  localStorage.setItem('pashumitra_role', role)
+  localStorage.setItem('pashumitra_language', language)
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin,
+      queryParams: {
+        prompt: 'select_account',
+      },
+    },
+  })
+
+  if (error) {
+    alert(error.message)
   }
+}
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">
@@ -115,9 +143,13 @@ function Login({ onLogin }) {
           <div className="hidden lg:flex bg-green-700 text-white p-10 xl:p-14 flex-col justify-between min-h-[720px]">
             <div>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-2xl">
-                  🐄
-                </div>
+              <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center bg-white">
+  <img
+    src="/pashumitra-logo.png"
+    alt="PashuMitra"
+    className="w-full h-full object-cover"
+  />
+</div>
 
                 <div>
                   <div className="text-2xl font-bold">PashuMitra</div>
@@ -173,9 +205,13 @@ function Login({ onLogin }) {
 
             <div className="flex items-center justify-between mb-8">
               <div className="lg:hidden flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center text-2xl">
-                  🐄
-                </div>
+               <div className="w-14 h-14 flex items-center justify-center">
+  <img
+    src="/pashumitra-logo.png"
+    alt="PashuMitra"
+    className="w-14 h-14 object-contain"
+  />
+</div>
 
                 <div>
                   <h1 className="text-xl font-bold text-slate-900">
@@ -223,6 +259,8 @@ function Login({ onLogin }) {
 
                 <input
                   type="text"
+                  value={email}
+onChange={(e) => setEmail(e.target.value)}
                   placeholder={t.emailPlaceholder}
                   className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
                 />
@@ -237,6 +275,8 @@ function Login({ onLogin }) {
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    value={password}
+  onChange={(e) => setPassword(e.target.value)}
                     placeholder={t.passwordPlaceholder}
                     className="w-full border border-slate-200 rounded-xl px-4 py-3.5 pr-12 text-sm text-slate-800 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
                   />

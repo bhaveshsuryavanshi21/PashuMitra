@@ -1,16 +1,45 @@
-import { useState } from 'react'
-import ReportAnimal from './pages/ReportAnimal_OLD'
-import FarmerDashboard from './pages/FarmerDashboard_OLD'
+import { useEffect, useState } from 'react'
+
+import ReportAnimal from './pages/ReportAnimal'
+import FarmerDashboard from './pages/FarmerDashboard'
 import VetDashboard from './pages/VetDashboard'
 import HealthRecords from './pages/HealthRecords'
-import OutbreakMap from './pages/OutbreakMap_old'
+import OutbreakMap from './pages/OutbreakMap'
 import Alerts from './pages/Alerts'
 import Login from './pages/Login'
+
+import { supabase } from './supabaseClient'
 
 function App() {
   const [page, setPage] = useState('login')
   const [role, setRole] = useState(null)
   const [language, setLanguage] = useState('en')
+
+  // Check whether the user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession()
+
+      if (data.session) {
+        const savedRole =
+          localStorage.getItem('pashumitra_role') || 'farmer'
+
+        const savedLanguage =
+          localStorage.getItem('pashumitra_language') || 'en'
+
+        setRole(savedRole)
+        setLanguage(savedLanguage)
+
+        if (savedRole === 'farmer') {
+          setPage('farmer')
+        } else {
+          setPage('vet')
+        }
+      }
+    }
+
+    checkSession()
+  }, [])
 
   const translations = {
     en: {
@@ -93,7 +122,13 @@ function App() {
           },
         ]
 
-  const handleLogout = () => {
+  // Logout from Supabase and clear local session data
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+
+    localStorage.removeItem('pashumitra_role')
+    localStorage.removeItem('pashumitra_language')
+
     setRole(null)
     setPage('login')
   }
@@ -103,6 +138,12 @@ function App() {
     return (
       <Login
         onLogin={(selectedRole, selectedLanguage) => {
+          localStorage.setItem('pashumitra_role', selectedRole)
+          localStorage.setItem(
+            'pashumitra_language',
+            selectedLanguage
+          )
+
           setRole(selectedRole)
           setLanguage(selectedLanguage)
 
@@ -119,49 +160,43 @@ function App() {
   return (
     <div className="min-h-screen bg-[#f6f8f5] text-slate-800">
 
-      {/* ================================
-          SIDEBAR
-      ================================= */}
-
-      <aside className="
-        fixed
-        left-0
-        top-0
-        z-50
-        hidden
-        h-screen
-        w-64
-        flex-col
-        border-r
-        border-slate-200
-        bg-white
-        lg:flex
-      ">
+      {/* SIDEBAR */}
+      <aside
+        className="
+          fixed
+          left-0
+          top-0
+          z-50
+          hidden
+          h-screen
+          w-64
+          flex-col
+          border-r
+          border-slate-200
+          bg-white
+          lg:flex
+        "
+      >
 
         {/* LOGO */}
-
-        <div className="
-          flex
-          h-24
-          items-center
-          gap-3
-          border-b
-          border-slate-100
-          px-7
-        ">
-
-          <div className="
+        <div
+          className="
             flex
-            h-11
-            w-11
+            h-24
             items-center
-            justify-center
-            rounded-xl
-            bg-green-50
-            text-2xl
-          ">
-            🐄
-          </div>
+            gap-3
+            border-b
+            border-slate-100
+            px-7
+          "
+        >
+          <div className="flex h-12 w-12 items-center justify-center">
+  <img
+    src="/pashumitra-logo.png"
+    alt="PashuMitra"
+    className="h-12 w-12 object-contain"
+  />
+</div>
 
           <div>
             <h1 className="text-xl font-bold tracking-tight text-green-800">
@@ -172,27 +207,26 @@ function App() {
               Animal Health Platform
             </p>
           </div>
-
         </div>
 
         {/* NAVIGATION */}
-
         <div className="flex-1 px-4 py-7">
 
-          <p className="
-            mb-3
-            px-3
-            text-[11px]
-            font-bold
-            uppercase
-            tracking-wider
-            text-slate-400
-          ">
+          <p
+            className="
+              mb-3
+              px-3
+              text-[11px]
+              font-bold
+              uppercase
+              tracking-wider
+              text-slate-400
+            "
+          >
             Main Menu
           </p>
 
           <div className="space-y-1">
-
             {navItems.map((item) => {
               const active = page === item.id
 
@@ -219,34 +253,30 @@ function App() {
                     }
                   `}
                 >
-
-                  <span className="
-                    flex
-                    h-8
-                    w-8
-                    items-center
-                    justify-center
-                    rounded-lg
-                    bg-slate-50
-                    text-base
-                  ">
+                  <span
+                    className="
+                      flex
+                      h-8
+                      w-8
+                      items-center
+                      justify-center
+                      rounded-lg
+                      bg-slate-50
+                      text-base
+                    "
+                  >
                     {item.icon}
                   </span>
 
                   {item.label}
-
                 </button>
               )
             })}
-
           </div>
-
         </div>
 
         {/* SIDEBAR BOTTOM */}
-
         <div className="border-t border-slate-100 p-4">
-
           <button
             type="button"
             onClick={handleLogout}
@@ -272,51 +302,46 @@ function App() {
 
             {t.logout}
           </button>
-
         </div>
-
       </aside>
 
-
-      {/* ================================
-          MOBILE / TOP HEADER
-      ================================= */}
-
-      <header className="
-        sticky
-        top-0
-        z-40
-        flex
-        h-16
-        items-center
-        justify-between
-        border-b
-        border-slate-200
-        bg-white/95
-        px-4
-        backdrop-blur
-        lg:hidden
-      ">
-
+      {/* MOBILE / TOP HEADER */}
+      <header
+        className="
+          sticky
+          top-0
+          z-40
+          flex
+          h-16
+          items-center
+          justify-between
+          border-b
+          border-slate-200
+          bg-white/95
+          px-4
+          backdrop-blur
+          lg:hidden
+        "
+      >
         <div className="flex items-center gap-2">
-
-          <div className="
-            flex
-            h-9
-            w-9
-            items-center
-            justify-center
-            rounded-lg
-            bg-green-50
-            text-lg
-          ">
+          <div
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              bg-green-50
+              text-lg
+            "
+          >
             🐄
           </div>
 
           <span className="font-bold text-green-800">
             PashuMitra
           </span>
-
         </div>
 
         <select
@@ -337,32 +362,26 @@ function App() {
           <option value="hi">हिंदी</option>
           <option value="mr">मराठी</option>
         </select>
-
       </header>
 
-
-      {/* ================================
-          MAIN CONTENT
-      ================================= */}
-
+      {/* MAIN CONTENT */}
       <main className="min-h-screen lg:ml-64">
 
         {/* TOP BAR */}
-
-        <div className="
-          hidden
-          h-20
-          items-center
-          justify-between
-          border-b
-          border-slate-200
-          bg-white
-          px-8
-          lg:flex
-        ">
-
+        <div
+          className="
+            hidden
+            h-20
+            items-center
+            justify-between
+            border-b
+            border-slate-200
+            bg-white
+            px-8
+            lg:flex
+          "
+        >
           <div>
-
             <p className="text-xs font-medium text-slate-400">
               PashuMitra
             </p>
@@ -372,14 +391,11 @@ function App() {
                 ? 'Farmer Portal'
                 : 'Veterinary Portal'}
             </h2>
-
           </div>
-
 
           <div className="flex items-center gap-4">
 
             {/* LANGUAGE */}
-
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
@@ -402,35 +418,35 @@ function App() {
               <option value="mr">मराठी</option>
             </select>
 
-
             {/* USER */}
-
-            <div className="
-              flex
-              items-center
-              gap-3
-              rounded-xl
-              bg-slate-50
-              px-3
-              py-2
-            ">
-
-              <div className="
+            <div
+              className="
                 flex
-                h-9
-                w-9
                 items-center
-                justify-center
-                rounded-full
-                bg-green-100
-                font-semibold
-                text-green-700
-              ">
+                gap-3
+                rounded-xl
+                bg-slate-50
+                px-3
+                py-2
+              "
+            >
+              <div
+                className="
+                  flex
+                  h-9
+                  w-9
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-green-100
+                  font-semibold
+                  text-green-700
+                "
+              >
                 {role === 'farmer' ? 'F' : 'V'}
               </div>
 
               <div className="hidden xl:block">
-
                 <p className="text-sm font-semibold text-slate-700">
                   {role === 'farmer'
                     ? 'Farmer'
@@ -442,60 +458,40 @@ function App() {
                     ? 'Farmer Account'
                     : 'Veterinary Account'}
                 </p>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
 
-
         {/* PAGE AREA */}
-
         <div className="p-4 sm:p-6 lg:p-8">
 
           {page === 'report' && (
-            <ReportAnimal
-              language={language}
-            />
+            <ReportAnimal language={language} />
           )}
 
           {page === 'farmer' && (
-            <FarmerDashboard
-              language={language}
-            />
+            <FarmerDashboard language={language} />
           )}
 
           {page === 'vet' && (
-            <VetDashboard
-              language={language}
-            />
+            <VetDashboard language={language} />
           )}
 
           {page === 'health' && (
-            <HealthRecords
-              language={language}
-            />
+            <HealthRecords language={language} />
           )}
 
           {page === 'alerts' && (
-            <Alerts
-              language={language}
-            />
+            <Alerts language={language} />
           )}
 
           {page === 'map' && (
-            <OutbreakMap
-              language={language}
-            />
+            <OutbreakMap language={language} />
           )}
 
         </div>
-
       </main>
-
     </div>
   )
 }

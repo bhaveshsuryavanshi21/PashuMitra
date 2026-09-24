@@ -1366,7 +1366,7 @@ function FarmerDashboard({ language }) {
           <div className="space-y-6">
 
             {/* Weather */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+            <section className="rounded-2xl border-2 border-blue-300 bg-blue-100 p-5 shadow-sm md:p-6">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-2xl">
@@ -1445,7 +1445,16 @@ function FarmerDashboard({ language }) {
                       report.longitude !== undefined
 
                     return (
-                      <article key={report.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                      <article
+  key={report.id}
+  className={`overflow-hidden rounded-2xl border border-slate-200 border-l-4 bg-white shadow-sm ${
+    report.priority === 'High'
+      ? 'border-l-red-500'
+      : report.priority === 'Medium'
+      ? 'border-l-orange-500'
+      : 'border-l-green-500'
+  }`}
+>
                         <div className="p-5 md:p-6">
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex items-center gap-3">
