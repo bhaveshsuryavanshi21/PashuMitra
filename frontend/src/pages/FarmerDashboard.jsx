@@ -10,1639 +10,1877 @@ const VETERINARY_TEAM_PHONE = '+916261349321'
 
 function FarmerDashboard({ language }) {
 
-  const [reports, setReports] = useState([])
+  const [reports, setReports] = useState([])
 
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [selectedReport, setSelectedReport] = useState(null)
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // WEATHER
+  // WEATHER
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const [weather, setWeather] = useState(null)
+  const [weather, setWeather] = useState(null)
 
-  const [weatherLoading, setWeatherLoading] = useState(false)
+  const [weatherLoading, setWeatherLoading] = useState(false)
 
-  const [weatherError, setWeatherError] = useState('')
+  const [weatherError, setWeatherError] = useState('')
 
 
 
-  const translations = {
+  const translations = {
 
-    en: {
+    en: {
 
-      title: 'Farmer Dashboard',
+      title: 'Farmer Dashboard',
 
-      description:
+      description:
 
-        'A simple view of your livestock health and veterinary cases.',
+        'A simple view of your livestock health and veterinary cases.',
 
 
 
-      totalCases: 'Total Cases',
+      totalCases: 'Total Cases',
 
-      highRisk: 'High Risk',
+      highRisk: 'High Risk',
 
-      pending: 'Pending',
+      pending: 'Pending',
 
-      resolved: 'Resolved',
+      resolved: 'Resolved',
 
 
 
-      recentCases: 'Recent Animal Cases',
+      recentCases: 'Recent Animal Cases',
 
-      liveData: 'Live Data',
+      liveData: 'Live Data',
 
 
 
-      age: 'Age',
+      age: 'Age',
 
-      years: 'years',
+      years: 'years',
 
-      symptoms: 'Symptoms',
+      symptoms: 'Symptoms',
 
-      location: 'Location',
+      location: 'Location',
 
-      gps: 'GPS',
+      gps: 'GPS',
 
 
 
-      vaccination: 'Vaccination',
+      vaccination: 'Vaccination',
 
-      treatment: 'Treatment',
+      treatment: 'Treatment',
 
-      veterinarian: 'Veterinarian',
+      veterinarian: 'Veterinarian',
 
 
 
-      notAssigned: 'Not Assigned',
+      notAssigned: 'Not Assigned',
 
-      noTreatment: 'No treatment recorded',
+      noTreatment: 'No treatment recorded',
 
-      notAvailable: 'Not Available',
+      notAvailable: 'Not Available',
 
 
 
-      status: 'Case Status',
+      status: 'Case Status',
 
-      riskLevel: 'Risk Level',
+      riskLevel: 'Risk Level',
 
 
 
-      submitted: 'Report Submitted',
+      submitted: 'Report Submitted',
 
-      riskAssessed: 'Risk Assessed',
+      riskAssessed: 'Risk Assessed',
 
-      vetReview: 'Veterinary Review',
+      vetReview: 'Veterinary Review',
 
-      treatmentStarted: 'Treatment',
+      treatmentStarted: 'Treatment',
 
 
 
-      pendingStatus: 'Pending',
+      pendingStatus: 'Pending',
 
-      inReview: 'In Review',
+      inReview: 'In Review',
 
-      resolvedStatus: 'Resolved',
+      resolvedStatus: 'Resolved',
 
 
 
-      low: 'Low Risk',
+      low: 'Low Risk',
 
-      medium: 'Medium Risk',
+      medium: 'Medium Risk',
 
-      high: 'High Risk',
+      high: 'High Risk',
 
 
 
-      lowMessage:
+      lowMessage:
 
-        'Continue monitoring the animal and maintain regular care.',
+        'Continue monitoring the animal and maintain regular care.',
 
-      mediumMessage:
+      mediumMessage:
 
-        'Veterinary review is recommended. Monitor the animal closely.',
+        'Veterinary review is recommended. Monitor the animal closely.',
 
-      highMessage:
+      highMessage:
 
-        'Prompt veterinary review is recommended for this case.',
+        'Prompt veterinary review is recommended for this case.',
 
 
 
-      fever: 'Fever',
+      fever: 'Fever',
 
-      salivation: 'Excessive Salivation',
+      salivation: 'Excessive Salivation',
 
-      difficultyWalking: 'Difficulty Walking',
+      difficultyWalking: 'Difficulty Walking',
 
-      coughing: 'Coughing',
+      coughing: 'Coughing',
 
 
 
-      cow: 'Cow',
+      cow: 'Cow',
 
-      buffalo: 'Buffalo',
+      buffalo: 'Buffalo',
 
-      goat: 'Goat',
+      goat: 'Goat',
 
-      sheep: 'Sheep',
+      sheep: 'Sheep',
 
 
 
-      vaccinated: 'Vaccinated',
+      vaccinated: 'Vaccinated',
 
-      notVaccinated: 'Not Vaccinated',
+      notVaccinated: 'Not Vaccinated',
 
 
 
-      noReports: 'No animal health reports found.',
+      noReports: 'No animal health reports found.',
 
-      loading: 'Loading animal cases...',
+      loading: 'Loading animal cases...',
 
 
 
-      veterinarySupport: 'Need Veterinary Help?',
+      veterinarySupport: 'Need Veterinary Help?',
 
-      veterinarySupportText:
+      veterinarySupportText:
 
-        'Get connected with the veterinary support team easily.',
+        'Get connected with the veterinary support team easily.',
 
-      callTeam: 'Call Veterinary Team',
+      callTeam: 'Call Veterinary Team',
 
-      requestCallback: 'Request Callback',
+      requestCallback: 'Request Callback',
 
-      emergencyHelp: 'Emergency Help',
+      emergencyHelp: 'Emergency Help',
 
-      callbackReceived:
+      callbackReceived:
 
-        'Your callback request has been received. The veterinary team will contact you.',
+        'Your callback request has been received. The veterinary team will contact you.',
 
-      emergencyText:
+      emergencyText:
 
-        'For an urgent animal health issue, contact the veterinary team immediately.',
+        'For an urgent animal health issue, contact the veterinary team immediately.',
 
 
 
-      // Weather
+      // Weather
 
-      weatherTitle: 'Local Weather',
+      weatherTitle: 'Local Weather',
 
-      weatherSubtitle:
+      weatherSubtitle:
 
-        'Current environmental conditions near your reported location.',
+        'Current environmental conditions near your reported location.',
 
-      temperature: 'Temperature',
+      temperature: 'Temperature',
 
-      feelsLike: 'Feels Like',
+      feelsLike: 'Feels Like',
 
-      humidity: 'Humidity',
+      humidity: 'Humidity',
 
-      wind: 'Wind',
+      wind: 'Wind',
 
-      clouds: 'Clouds',
+      clouds: 'Clouds',
 
-      weatherUnavailable: 'Weather information is currently unavailable.',
+      weatherUnavailable: 'Weather information is currently unavailable.',
 
-      weatherLoading: 'Loading weather...',
+      weatherLoading: 'Loading weather...',
 
-      environmentalNote:
+      environmentalNote:
 
-        'Weather is shown as environmental context and is not a disease diagnosis.',
+        'Weather is shown as environmental context and is not a disease diagnosis.',
 
-    },
+    },
 
 
 
-    hi: {
+    hi: {
 
-      title: 'किसान डैशबोर्ड',
+      title: 'किसान डैशबोर्ड',
 
-      description:
+      description:
 
-        'अपने पशुओं के स्वास्थ्य और पशु चिकित्सा मामलों की सरल जानकारी देखें।',
+        'अपने पशुओं के स्वास्थ्य और पशु चिकित्सा मामलों की सरल जानकारी देखें।',
 
 
 
-      totalCases: 'कुल मामले',
+      totalCases: 'कुल मामले',
 
-      highRisk: 'उच्च जोखिम',
+      highRisk: 'उच्च जोखिम',
 
-      pending: 'लंबित',
+      pending: 'लंबित',
 
-      resolved: 'समाधान किए गए',
+      resolved: 'समाधान किए गए',
 
 
 
-      recentCases: 'हाल के पशु मामले',
+      recentCases: 'हाल के पशु मामले',
 
-      liveData: 'लाइव डेटा',
+      liveData: 'लाइव डेटा',
 
 
 
-      age: 'उम्र',
+      age: 'उम्र',
 
-      years: 'वर्ष',
+      years: 'वर्ष',
 
-      symptoms: 'लक्षण',
+      symptoms: 'लक्षण',
 
-      location: 'स्थान',
+      location: 'स्थान',
 
-      gps: 'जीपीएस',
+      gps: 'जीपीएस',
 
 
 
-      vaccination: 'टीकाकरण',
+      vaccination: 'टीकाकरण',
 
-      treatment: 'उपचार',
+      treatment: 'उपचार',
 
-      veterinarian: 'पशु चिकित्सक',
+      veterinarian: 'पशु चिकित्सक',
 
 
 
-      notAssigned: 'नियुक्त नहीं',
+      notAssigned: 'नियुक्त नहीं',
 
-      noTreatment: 'कोई उपचार दर्ज नहीं है',
+      noTreatment: 'कोई उपचार दर्ज नहीं है',
 
-      notAvailable: 'उपलब्ध नहीं',
+      notAvailable: 'उपलब्ध नहीं',
 
 
 
-      status: 'मामले की स्थिति',
+      status: 'मामले की स्थिति',
 
-      riskLevel: 'जोखिम स्तर',
+      riskLevel: 'जोखिम स्तर',
 
 
 
-      submitted: 'रिपोर्ट भेजी गई',
+      submitted: 'रिपोर्ट भेजी गई',
 
-      riskAssessed: 'जोखिम आकलन',
+      riskAssessed: 'जोखिम आकलन',
 
-      vetReview: 'पशु चिकित्सक की जांच',
+      vetReview: 'पशु चिकित्सक की जांच',
 
-      treatmentStarted: 'उपचार',
+      treatmentStarted: 'उपचार',
 
 
 
-      pendingStatus: 'लंबित',
+      pendingStatus: 'लंबित',
 
-      inReview: 'जांच में',
+      inReview: 'जांच में',
 
-      resolvedStatus: 'समाधान किया गया',
+      resolvedStatus: 'समाधान किया गया',
 
 
 
-      low: 'कम जोखिम',
+      low: 'कम जोखिम',
 
-      medium: 'मध्यम जोखिम',
+      medium: 'मध्यम जोखिम',
 
-      high: 'उच्च जोखिम',
+      high: 'उच्च जोखिम',
 
 
 
-      lowMessage:
+      lowMessage:
 
-        'पशु की निगरानी जारी रखें और नियमित देखभाल करें।',
+        'पशु की निगरानी जारी रखें और नियमित देखभाल करें।',
 
-      mediumMessage:
+      mediumMessage:
 
-        'पशु चिकित्सक से जांच कराने की सलाह दी जाती है।',
+        'पशु चिकित्सक से जांच कराने की सलाह दी जाती है।',
 
-      highMessage:
+      highMessage:
 
-        'इस मामले में जल्द से जल्द पशु चिकित्सक से जांच कराने की सलाह दी जाती है।',
+        'इस मामले में जल्द से जल्द पशु चिकित्सक से जांच कराने की सलाह दी जाती है।',
 
 
 
-      fever: 'बुखार',
+      fever: 'बुखार',
 
-      salivation: 'अधिक लार आना',
+      salivation: 'अधिक लार आना',
 
-      difficultyWalking: 'चलने में कठिनाई',
+      difficultyWalking: 'चलने में कठिनाई',
 
-      coughing: 'खांसी',
+      coughing: 'खांसी',
 
 
 
-      cow: 'गाय',
+      cow: 'गाय',
 
-      buffalo: 'भैंस',
+      buffalo: 'भैंस',
 
-      goat: 'बकरी',
+      goat: 'बकरी',
 
-      sheep: 'भेड़',
+      sheep: 'भेड़',
 
 
 
-      vaccinated: 'टीकाकरण हुआ',
+      vaccinated: 'टीकाकरण हुआ',
 
-      notVaccinated: 'टीकाकरण नहीं हुआ',
+      notVaccinated: 'टीकाकरण नहीं हुआ',
 
 
 
-      noReports: 'कोई पशु स्वास्थ्य रिपोर्ट नहीं मिली।',
+      noReports: 'कोई पशु स्वास्थ्य रिपोर्ट नहीं मिली।',
 
-      loading: 'पशु मामलों को लोड किया जा रहा है...',
+      loading: 'पशु मामलों को लोड किया जा रहा है...',
 
 
 
-      veterinarySupport: 'पशु चिकित्सक की मदद चाहिए?',
+      veterinarySupport: 'पशु चिकित्सक की मदद चाहिए?',
 
-      veterinarySupportText:
+      veterinarySupportText:
 
-        'पशु चिकित्सा सहायता टीम से आसानी से संपर्क करें।',
+        'पशु चिकित्सा सहायता टीम से आसानी से संपर्क करें।',
 
-      callTeam: 'पशु चिकित्सा टीम को कॉल करें',
+      callTeam: 'पशु चिकित्सा टीम को कॉल करें',
 
-      requestCallback: 'कॉल बैक का अनुरोध करें',
+      requestCallback: 'कॉल बैक का अनुरोध करें',
 
-      emergencyHelp: 'आपातकालीन सहायता',
+      emergencyHelp: 'आपातकालीन सहायता',
 
-      callbackReceived:
+      callbackReceived:
 
-        'आपका कॉल बैक अनुरोध प्राप्त हो गया है। पशु चिकित्सा टीम आपसे संपर्क करेगी।',
+        'आपका कॉल बैक अनुरोध प्राप्त हो गया है। पशु चिकित्सा टीम आपसे संपर्क करेगी।',
 
-      emergencyText:
+      emergencyText:
 
-        'पशु की गंभीर स्वास्थ्य समस्या होने पर तुरंत पशु चिकित्सा टीम से संपर्क करें।',
+        'पशु की गंभीर स्वास्थ्य समस्या होने पर तुरंत पशु चिकित्सा टीम से संपर्क करें।',
 
 
 
-      // Weather
+      // Weather
 
-      weatherTitle: 'स्थानीय मौसम',
+      weatherTitle: 'स्थानीय मौसम',
 
-      weatherSubtitle:
+      weatherSubtitle:
 
-        'आपके रिपोर्ट किए गए स्थान के पास वर्तमान पर्यावरणीय स्थिति।',
+        'आपके रिपोर्ट किए गए स्थान के पास वर्तमान पर्यावरणीय स्थिति।',
 
-      temperature: 'तापमान',
+      temperature: 'तापमान',
 
-      feelsLike: 'महसूस होने वाला तापमान',
+      feelsLike: 'महसूस होने वाला तापमान',
 
-      humidity: 'नमी',
+      humidity: 'नमी',
 
-      wind: 'हवा',
+      wind: 'हवा',
 
-      clouds: 'बादल',
+      clouds: 'बादल',
 
-      weatherUnavailable: 'मौसम की जानकारी अभी उपलब्ध नहीं है।',
+      weatherUnavailable: 'मौसम की जानकारी अभी उपलब्ध नहीं है।',
 
-      weatherLoading: 'मौसम लोड हो रहा है...',
+      weatherLoading: 'मौसम लोड हो रहा है...',
 
-      environmentalNote:
+      environmentalNote:
 
-        'मौसम केवल पर्यावरणीय जानकारी है और रोग का निदान नहीं है।',
+        'मौसम केवल पर्यावरणीय जानकारी है और रोग का निदान नहीं है।',
 
-    },
+    },
 
 
 
-    mr: {
+    mr: {
 
-      title: 'शेतकरी डॅशबोर्ड',
+      title: 'शेतकरी डॅशबोर्ड',
 
-      description:
+      description:
 
-        'तुमच्या प्राण्यांच्या आरोग्याची आणि पशुवैद्यकीय प्रकरणांची सोपी माहिती पहा.',
+        'तुमच्या प्राण्यांच्या आरोग्याची आणि पशुवैद्यकीय प्रकरणांची सोपी माहिती पहा.',
 
 
 
-      totalCases: 'एकूण प्रकरणे',
+      totalCases: 'एकूण प्रकरणे',
 
-      highRisk: 'जास्त जोखीम',
+      highRisk: 'जास्त जोखीम',
 
-      pending: 'प्रलंबित',
+      pending: 'प्रलंबित',
 
-      resolved: 'निराकरण झाले',
+      resolved: 'निराकरण झाले',
 
 
 
-      recentCases: 'अलीकडील प्राणी प्रकरणे',
+      recentCases: 'अलीकडील प्राणी प्रकरणे',
 
-      liveData: 'लाइव्ह डेटा',
+      liveData: 'लाइव्ह डेटा',
 
 
 
-      age: 'वय',
+      age: 'वय',
 
-      years: 'वर्षे',
+      years: 'वर्षे',
 
-      symptoms: 'लक्षणे',
+      symptoms: 'लक्षणे',
 
-      location: 'ठिकाण',
+      location: 'ठिकाण',
 
-      gps: 'जीपीएस',
+      gps: 'जीपीएस',
 
 
 
-      vaccination: 'लसीकरण',
+      vaccination: 'लसीकरण',
 
-      treatment: 'उपचार',
+      treatment: 'उपचार',
 
-      veterinarian: 'पशुवैद्यक',
+      veterinarian: 'पशुवैद्यक',
 
 
 
-      notAssigned: 'नियुक्त केलेले नाही',
+      notAssigned: 'नियुक्त केलेले नाही',
 
-      noTreatment: 'उपचाराची नोंद नाही',
+      noTreatment: 'उपचाराची नोंद नाही',
 
-      notAvailable: 'उपलब्ध नाही',
+      notAvailable: 'उपलब्ध नाही',
 
 
 
-      status: 'प्रकरणाची स्थिती',
+      status: 'प्रकरणाची स्थिती',
 
-      riskLevel: 'जोखीम पातळी',
+      riskLevel: 'जोखीम पातळी',
 
 
 
-      submitted: 'अहवाल पाठवला',
+      submitted: 'अहवाल पाठवला',
 
-      riskAssessed: 'जोखीम मूल्यांकन',
+      riskAssessed: 'जोखीम मूल्यांकन',
 
-      vetReview: 'पशुवैद्यकीय तपासणी',
+      vetReview: 'पशुवैद्यकीय तपासणी',
 
-      treatmentStarted: 'उपचार',
+      treatmentStarted: 'उपचार',
 
 
 
-      pendingStatus: 'प्रलंबित',
+      pendingStatus: 'प्रलंबित',
 
-      inReview: 'तपासणी सुरू',
+      inReview: 'तपासणी सुरू',
 
-      resolvedStatus: 'निराकरण झाले',
+      resolvedStatus: 'निराकरण झाले',
 
 
 
-      low: 'कमी जोखीम',
+      low: 'कमी जोखीम',
 
-      medium: 'मध्यम जोखीम',
+      medium: 'मध्यम जोखीम',
 
-      high: 'जास्त जोखीम',
+      high: 'जास्त जोखीम',
 
 
 
-      lowMessage:
+      lowMessage:
 
-        'प्राण्याचे निरीक्षण सुरू ठेवा आणि नियमित काळजी घ्या.',
+        'प्राण्याचे निरीक्षण सुरू ठेवा आणि नियमित काळजी घ्या.',
 
-      mediumMessage:
+      mediumMessage:
 
-        'पशुवैद्यकाकडून तपासणी करण्याची शिफारस केली जाते.',
+        'पशुवैद्यकाकडून तपासणी करण्याची शिफारस केली जाते.',
 
-      highMessage:
+      highMessage:
 
-        'या प्रकरणासाठी लवकरात लवकर पशुवैद्यकाकडून तपासणी करण्याची शिफारस केली जाते.',
+        'या प्रकरणासाठी लवकरात लवकर पशुवैद्यकाकडून तपासणी करण्याची शिफारस केली जाते.',
 
 
 
-      fever: 'ताप',
+      fever: 'ताप',
 
-      salivation: 'जास्त लाळ येणे',
+      salivation: 'जास्त लाळ येणे',
 
-      difficultyWalking: 'चालण्यास त्रास',
+      difficultyWalking: 'चालण्यास त्रास',
 
-      coughing: 'खोकला',
+      coughing: 'खोकला',
 
 
 
-      cow: 'गाय',
+      cow: 'गाय',
 
-      buffalo: 'म्हैस',
+      buffalo: 'म्हैस',
 
-      goat: 'शेळी',
+      goat: 'शेळी',
 
-      sheep: 'मेंढी',
+      sheep: 'मेंढी',
 
 
 
-      vaccinated: 'लसीकरण झाले',
+      vaccinated: 'लसीकरण झाले',
 
-      notVaccinated: 'लसीकरण झाले नाही',
+      notVaccinated: 'लसीकरण झाले नाही',
 
 
 
-      noReports: 'प्राण्यांच्या आरोग्याचे अहवाल आढळले नाहीत.',
+      noReports: 'प्राण्यांच्या आरोग्याचे अहवाल आढळले नाहीत.',
 
-      loading: 'प्राण्यांची प्रकरणे लोड होत आहेत...',
+      loading: 'प्राण्यांची प्रकरणे लोड होत आहेत...',
 
 
 
-      veterinarySupport: 'पशुवैद्यकीय मदत हवी आहे?',
+      veterinarySupport: 'पशुवैद्यकीय मदत हवी आहे?',
 
-      veterinarySupportText:
+      veterinarySupportText:
 
-        'पशुवैद्यकीय सहाय्य टीमशी सहज संपर्क साधा.',
+        'पशुवैद्यकीय सहाय्य टीमशी सहज संपर्क साधा.',
 
-      callTeam: 'पशुवैद्यकीय टीमला कॉल करा',
+      callTeam: 'पशुवैद्यकीय टीमला कॉल करा',
 
-      requestCallback: 'कॉल बॅकची विनंती करा',
+      requestCallback: 'कॉल बॅकची विनंती करा',
 
-      emergencyHelp: 'आपत्कालीन मदत',
+      emergencyHelp: 'आपत्कालीन मदत',
 
-      callbackReceived:
+      callbackReceived:
 
-        'तुमची कॉल बॅक विनंती प्राप्त झाली आहे. पशुवैद्यकीय टीम तुमच्याशी संपर्क साधेल.',
+        'तुमची कॉल बॅक विनंती प्राप्त झाली आहे. पशुवैद्यकीय टीम तुमच्याशी संपर्क साधेल.',
 
-      emergencyText:
+      emergencyText:
 
-        'प्राण्याची गंभीर आरोग्य समस्या असल्यास त्वरित पशुवैद्यकीय टीमशी संपर्क साधा.',
+        'प्राण्याची गंभीर आरोग्य समस्या असल्यास त्वरित पशुवैद्यकीय टीमशी संपर्क साधा.',
 
 
 
-      // Weather
+      // Weather
 
-      weatherTitle: 'स्थानिक हवामान',
+      weatherTitle: 'स्थानिक हवामान',
 
-      weatherSubtitle:
+      weatherSubtitle:
 
-        'तुमच्या नोंदवलेल्या ठिकाणाजवळील सध्याची पर्यावरणीय स्थिती.',
+        'तुमच्या नोंदवलेल्या ठिकाणाजवळील सध्याची पर्यावरणीय स्थिती.',
 
-      temperature: 'तापमान',
+      temperature: 'तापमान',
 
-      feelsLike: 'जाणवणारे तापमान',
+      feelsLike: 'जाणवणारे तापमान',
 
-      humidity: 'आर्द्रता',
+      humidity: 'आर्द्रता',
 
-      wind: 'वारा',
+      wind: 'वारा',
 
-      clouds: 'ढग',
+      clouds: 'ढग',
 
-      weatherUnavailable: 'हवामानाची माहिती सध्या उपलब्ध नाही.',
+      weatherUnavailable: 'हवामानाची माहिती सध्या उपलब्ध नाही.',
 
-      weatherLoading: 'हवामान लोड होत आहे...',
+      weatherLoading: 'हवामान लोड होत आहे...',
 
-      environmentalNote:
+      environmentalNote:
 
-        'हवामान ही केवळ पर्यावरणीय माहिती आहे; हा रोगाचा निदान नाही.',
+        'हवामान ही केवळ पर्यावरणीय माहिती आहे; हा रोगाचा निदान नाही.',
 
-    },
+    },
 
-  }
+  }
 
 
 
-  const t = translations[language] || translations.en
+  const t = translations[language] || translations.en
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // FETCH REPORTS
+  // FETCH REPORTS
 
-  // =========================================================
+  // =========================================================
 
 
 
-  useEffect(() => {
+  useEffect(() => {
 
-    const fetchReports = async () => {
+    const fetchReports = async () => {
 
-      try {
+      try {
 
-        setLoading(false)
+        setLoading(false)
 
 
 
-        const response = await fetch(
+        const response = await fetch(
 
-  `${API_BASE_URL}/reports`
+  `${API_BASE_URL}/reports`
 
 )
 
 
 
-        if (!response.ok) {
+        if (!response.ok) {
 
-          throw new Error('Failed to fetch reports')
+          throw new Error('Failed to fetch reports')
 
-        }
+        }
 
 
 
-        const data = await response.json()
+        const data = await response.json()
 
 
 
-        setReports(data)
+        setReports(data)
 
 
 
-        console.log('Farmer dashboard reports:', data)
+        console.log('Farmer dashboard reports:', data)
 
-      } catch (error) {
+      } catch (error) {
 
-        console.error(
+        console.error(
 
-          'Failed to fetch reports:',
+          'Failed to fetch reports:',
 
-          error
+          error
 
-        )
+        )
 
-      } finally {
+      } finally {
 
-        setLoading(false)
+        setLoading(false)
 
-      }
+      }
 
-    }
+    }
 
 
 
-    fetchReports()
+    fetchReports()
 
 
 
-  }, [])
+  }, [])
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // FETCH WEATHER USING LATEST GPS REPORT
+  // FETCH WEATHER USING LATEST GPS REPORT
 
-  // =========================================================
+  // =========================================================
 
 
 
-  useEffect(() => {
+  useEffect(() => {
 
-    if (!reports.length) {
+    if (!reports.length) {
 
-      setWeather(null)
+      setWeather(null)
 
-      return
+      return
 
-    }
+    }
 
 
 
-    const reportWithGPS = reports.find(
+    const reportWithGPS = reports.find(
 
-      (report) =>
+      (report) =>
 
-        report.latitude !== null &&
+        report.latitude !== null &&
 
-        report.latitude !== undefined &&
+        report.latitude !== undefined &&
 
-        report.longitude !== null &&
+        report.longitude !== null &&
 
-        report.longitude !== undefined &&
+        report.longitude !== undefined &&
 
-        !isNaN(Number(report.latitude)) &&
+        !isNaN(Number(report.latitude)) &&
 
-        !isNaN(Number(report.longitude))
+        !isNaN(Number(report.longitude))
 
-    )
+    )
 
 
 
-    if (!reportWithGPS) {
+    if (!reportWithGPS) {
 
-      setWeather(null)
+      setWeather(null)
 
-      return
+      return
 
-    }
+    }
 
 
 
-    const latitude = Number(reportWithGPS.latitude)
+    const latitude = Number(reportWithGPS.latitude)
 
-    const longitude = Number(reportWithGPS.longitude)
+    const longitude = Number(reportWithGPS.longitude)
 
 
 
-    const fetchWeather = async () => {
+    const fetchWeather = async () => {
 
-      try {
+      try {
 
-        setWeatherLoading(true)
+        setWeatherLoading(true)
 
-        setWeatherError('')
+        setWeatherError('')
 
 
 
-        const response = await fetch(
+        const response = await fetch(
 
-          `${API_BASE_URL}/weather?lat=${latitude}&lon=${longitude}`
+          `${API_BASE_URL}/weather?lat=${latitude}&lon=${longitude}`
 
-        )
+        )
 
 
 
-        if (!response.ok) {
+        if (!response.ok) {
 
-          throw new Error('Failed to fetch weather')
+          throw new Error('Failed to fetch weather')
 
-        }
+        }
 
 
 
-        const data = await response.json()
+        const data = await response.json()
 
 
 
-        setWeather(data)
+        setWeather(data)
 
 
 
-        console.log(
+        console.log(
 
-          'Local weather:',
+          'Local weather:',
 
-          data
+          data
 
-        )
+        )
 
-      } catch (error) {
+      } catch (error) {
 
-        console.error(
+        console.error(
 
-          'Failed to fetch weather:',
+          'Failed to fetch weather:',
 
-          error
+          error
 
-        )
+        )
 
 
 
-        setWeatherError(
+        setWeatherError(
 
-          t.weatherUnavailable
+          t.weatherUnavailable
 
-        )
+        )
 
-      } finally {
+      } finally {
 
-        setWeatherLoading(false)
+        setWeatherLoading(false)
 
-      }
+      }
 
-    }
+    }
 
 
 
-    fetchWeather()
+    fetchWeather()
 
-  }, [reports, t.weatherUnavailable])
+  }, [reports, t.weatherUnavailable])
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // ANIMAL NAME
+  // ANIMAL NAME
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const getAnimalName = (animal) => {
+  const getAnimalName = (animal) => {
 
-    const value = animal?.toLowerCase()
+    const value = animal?.toLowerCase()
 
 
 
-    if (value === 'cow') return t.cow
+    if (value === 'cow') return t.cow
 
-    if (value === 'buffalo') return t.buffalo
+    if (value === 'buffalo') return t.buffalo
 
-    if (value === 'goat') return t.goat
+    if (value === 'goat') return t.goat
 
-    if (value === 'sheep') return t.sheep
+    if (value === 'sheep') return t.sheep
 
 
 
-    return animal || 'Animal'
+    return animal || 'Animal'
 
-  }
+  }
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // ANIMAL ICON
+  // ANIMAL ICON
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const getAnimalIcon = (animal) => {
+  const getAnimalIcon = (animal) => {
 
-    const value = animal?.toLowerCase()
+    const value = animal?.toLowerCase()
 
 
 
-    if (value === 'cow') return '🐄'
+    if (value === 'cow') return '🐄'
 
-    if (value === 'buffalo') return '🐃'
+    if (value === 'buffalo') return '🐃'
 
-    if (value === 'goat') return '🐐'
+    if (value === 'goat') return '🐐'
 
-    if (value === 'sheep') return '🐑'
+    if (value === 'sheep') return '🐑'
 
 
 
-    return '🐾'
+    return '🐾'
 
-  }
+  }
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // SYMPTOMS
+  // SYMPTOMS
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const getSymptoms = (symptoms) => {
+  const getSymptoms = (symptoms) => {
 
-    if (!symptoms) return []
+    if (!symptoms) return []
 
 
 
-    return symptoms
+    return symptoms
 
-      .split(',')
+      .split(',')
 
-      .map((symptom) => symptom.trim())
+      .map((symptom) => symptom.trim())
 
-      .filter((symptom) => symptom !== '')
+      .filter((symptom) => symptom !== '')
 
-  }
+  }
 
 
 
-  const getSymptomName = (symptom) => {
+  const getSymptomName = (symptom) => {
 
-    const value = symptom
+    const value = symptom
 
-      .trim()
+      .trim()
 
-      .toLowerCase()
+      .toLowerCase()
 
 
 
-    if (value === 'fever') {
+    if (value === 'fever') {
 
-      return `🌡️ ${t.fever}`
+      return `🌡️ ${t.fever}`
 
-    }
+    }
 
 
 
-    if (value === 'salivation') {
+    if (value === 'salivation') {
 
-      return `💧 ${t.salivation}`
+      return `💧 ${t.salivation}`
 
-    }
+    }
 
 
 
-    if (value === 'difficulty_walking') {
+    if (value === 'difficulty_walking') {
 
-      return `🚶 ${t.difficultyWalking}`
+      return `🚶 ${t.difficultyWalking}`
 
-    }
+    }
 
 
 
-    if (value === 'coughing') {
+    if (value === 'coughing') {
 
-      return `🫁 ${t.coughing}`
+      return `🫁 ${t.coughing}`
 
-    }
+    }
 
 
 
-    return symptom
+    return symptom
 
-  }
+  }
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // RISK
+  // RISK
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const getRiskLabel = (priority) => {
+  const getRiskLabel = (priority) => {
 
-    if (priority === 'High') return t.high
+    if (priority === 'High') return t.high
 
-    if (priority === 'Medium') return t.medium
+    if (priority === 'Medium') return t.medium
 
-    if (priority === 'Low') return t.low
+    if (priority === 'Low') return t.low
 
 
 
-    return t.notAvailable
+    return t.notAvailable
 
-  }
+  }
 
 
 
-  const getRiskMessage = (priority) => {
+  const getRiskMessage = (priority) => {
 
-    if (priority === 'High') {
+    if (priority === 'High') {
 
-      return t.highMessage
+      return t.highMessage
 
-    }
+    }
 
 
 
-    if (priority === 'Medium') {
+    if (priority === 'Medium') {
 
-      return t.mediumMessage
+      return t.mediumMessage
 
-    }
+    }
 
 
 
-    if (priority === 'Low') {
+    if (priority === 'Low') {
 
-      return t.lowMessage
+      return t.lowMessage
 
-    }
+    }
 
 
 
-    return ''
+    return ''
 
-  }
+  }
 
 
 
-  const getRiskStyle = (priority) => {
+  const getRiskStyle = (priority) => {
 
-    if (priority === 'High') {
+    if (priority === 'High') {
 
-      return {
+      return {
 
-        badge:
+        badge:
 
-          'bg-red-50 text-red-700 border-red-200',
+          'bg-red-50 text-red-700 border-red-200',
 
-        border: 'border-red-300',
+        border: 'border-red-300',
 
-        background: 'bg-red-50',
+        background: 'bg-red-50',
 
-        dot: 'bg-red-500',
+        dot: 'bg-red-500',
 
-      }
+      }
 
-    }
+    }
 
 
 
-    if (priority === 'Medium') {
+    if (priority === 'Medium') {
 
-      return {
+      return {
 
-        badge:
+        badge:
 
-          'bg-orange-50 text-orange-700 border-orange-200',
+          'bg-orange-50 text-orange-700 border-orange-200',
 
-        border: 'border-orange-300',
+        border: 'border-orange-300',
 
-        background: 'bg-orange-50',
+        background: 'bg-orange-50',
 
-        dot: 'bg-orange-500',
+        dot: 'bg-orange-500',
 
-      }
+      }
 
-    }
+    }
 
 
 
-    return {
+    return {
 
-      badge:
+      badge:
 
-        'bg-green-50 text-green-700 border-green-200',
+        'bg-green-50 text-green-700 border-green-200',
 
-      border: 'border-green-300',
+      border: 'border-green-300',
 
-      background: 'bg-green-50',
+      background: 'bg-green-50',
 
-      dot: 'bg-green-500',
+      dot: 'bg-green-500',
 
-    }
+    }
 
-  }
+  }
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // STATUS
+  // STATUS
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status) => {
 
-    if (status === 'Pending') {
+    if (status === 'Pending') {
 
-      return t.pendingStatus
+      return t.pendingStatus
 
-    }
+    }
 
 
 
-    if (status === 'In Review') {
+    if (status === 'In Review') {
 
-      return t.inReview
+      return t.inReview
 
-    }
+    }
 
 
 
-    if (status === 'Resolved') {
+    if (status === 'Resolved') {
 
-      return t.resolvedStatus
+      return t.resolvedStatus
 
-    }
+    }
 
 
 
-    return status || t.notAvailable
+    return status || t.notAvailable
 
-  }
+  }
 
 
 
-  const getStatusStyle = (status) => {
+  const getStatusStyle = (status) => {
 
-    if (status === 'Resolved') {
+    if (status === 'Resolved') {
 
-      return 'bg-green-50 text-green-700 border-green-200'
+      return 'bg-green-50 text-green-700 border-green-200'
 
-    }
+    }
 
 
 
-    if (status === 'In Review') {
+    if (status === 'In Review') {
 
-      return 'bg-blue-50 text-blue-700 border-blue-200'
+      return 'bg-blue-50 text-blue-700 border-blue-200'
 
-    }
+    }
 
 
 
-    return 'bg-yellow-50 text-yellow-700 border-yellow-200'
+    return 'bg-yellow-50 text-yellow-700 border-yellow-200'
 
-  }
+  }
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // COUNTS
+  // COUNTS
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const totalCases = reports.length
+  const totalCases = reports.length
 
 
 
-  const highRiskCases = reports.filter(
+  const highRiskCases = reports.filter(
 
-    (report) =>
+    (report) =>
 
-      report.priority === 'High'
+      report.priority === 'High'
 
-  ).length
+  ).length
 
 
 
-  const pendingCases = reports.filter(
+  const pendingCases = reports.filter(
 
-    (report) =>
+    (report) =>
 
-      report.status === 'Pending'
+      report.status === 'Pending'
 
-  ).length
+  ).length
 
 
 
-  const resolvedCases = reports.filter(
+  const resolvedCases = reports.filter(
 
-    (report) =>
+    (report) =>
 
-      report.status === 'Resolved'
+      report.status === 'Resolved'
 
-  ).length
+  ).length
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // PROGRESS
+  // PROGRESS
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const getProgressStep = (report) => {
+  const getProgressStep = (report) => {
 
-    if (report.status === 'Resolved') {
+    if (report.status === 'Resolved') {
 
-      return 4
+      return 4
 
-    }
+    }
 
 
 
-    if (
+    if (
 
-      report.treatment_history &&
+      report.treatment_history &&
 
-      report.treatment_history !==
+      report.treatment_history !==
 
-        'No treatment recorded'
+        'No treatment recorded'
 
-    ) {
+    ) {
 
-      return 4
+      return 4
 
-    }
+    }
 
 
 
-    if (
+    if (
 
-      report.assigned_vet &&
+      report.assigned_vet &&
 
-      report.assigned_vet !==
+      report.assigned_vet !==
 
-        'Not Assigned'
+        'Not Assigned'
 
-    ) {
+    ) {
 
-      return 3
+      return 3
 
-    }
+    }
 
 
 
-    if (report.priority) {
+    if (report.priority) {
 
-      return 2
+      return 2
 
-    }
+    }
 
 
 
-    return 1
+    return 1
 
-  }
+  }
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // WEATHER ICON
+  // WEATHER ICON
 
-  // =========================================================
+  // =========================================================
 
 
 
-  const getWeatherIcon = (condition) => {
+  const getWeatherIcon = (condition) => {
 
-    const value =
+    const value =
 
-      condition?.toLowerCase() || ''
+      condition?.toLowerCase() || ''
 
 
 
-    if (value.includes('rain')) return '🌧️'
+    if (value.includes('rain')) return '🌧️'
 
-    if (value.includes('thunder')) return '⛈️'
+    if (value.includes('thunder')) return '⛈️'
 
-    if (value.includes('cloud')) return '☁️'
+    if (value.includes('cloud')) return '☁️'
 
-    if (value.includes('snow')) return '❄️'
+    if (value.includes('snow')) return '❄️'
 
-    if (value.includes('clear')) return '☀️'
+    if (value.includes('clear')) return '☀️'
 
-    if (value.includes('mist')) return '🌫️'
+    if (value.includes('mist')) return '🌫️'
 
-    if (value.includes('fog')) return '🌫️'
+    if (value.includes('fog')) return '🌫️'
 
-    if (value.includes('haze')) return '🌫️'
+    if (value.includes('haze')) return '🌫️'
 
 
 
-    return '🌤️'
+    return '🌤️'
 
-  }
+  }
 
 
 
-  // =========================================================
+  // =========================================================
 
-  // LOADING
 
-  // =========================================================
+  // =========================================================
+  // LOADING
+  // =========================================================
 
-
-
-  if (loading) {
-
-    return (
-
-      <div className="min-h-screen bg-slate-50 p-6">
-
-        <div className="max-w-6xl mx-auto">
-
-
-
-          <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-sm">
-
-
-
-            <div className="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto"></div>
-
-
-
-            <p className="text-slate-600 mt-4 font-medium">
-
-              {t.loading}
-
-            </p>
-
-
-
-          </div>
-
-
-
-        </div>
-
-      </div>
-
-    )
-
-  }
-
-
-
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
-
-        {/* Header */}
-        <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-green-100 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              {t.liveData}
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-              {t.title}
-            </h1>
-            <p className="mt-1 max-w-2xl text-sm text-slate-500 md:text-base">
-              {t.description}
-            </p>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f7f9f8] px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 h-8 w-64 animate-pulse rounded-lg bg-slate-200" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+            <div className="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white" />
           </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-green-600">PashuMitra</p>
-            <p className="mt-1 text-sm font-medium text-slate-700">Farmer health overview</p>
-          </div>
+          <div className="mt-6 h-96 animate-pulse rounded-2xl border border-slate-200 bg-white" />
         </div>
+      </div>
+    )
+  }
 
-        {/* Summary */}
-        <div className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-          {[
-            { label: t.totalCases, value: totalCases, icon: '📋', tone: 'slate' },
-            { label: t.highRisk, value: highRiskCases, icon: '🚨', tone: 'red' },
-            { label: t.pending, value: pendingCases, icon: '⏳', tone: 'amber' },
-            { label: t.resolved, value: resolvedCases, icon: '✓', tone: 'green' },
-          ].map((item) => {
-            const toneClasses = {
-              slate: 'bg-slate-100 text-slate-700',
-              red: 'bg-red-50 text-red-600',
-              amber: 'bg-amber-50 text-amber-600',
-              green: 'bg-green-50 text-green-600',
-            }
+  const getReportDate = (report) => {
+    const value = report?.created_at || report?.report_date || report?.date
+    if (!value) return '—'
 
-            return (
-              <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{item.label}</p>
-                    <p className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">{item.value}</p>
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return value
+
+    return parsed.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  const getStatusPill = (status) => {
+    const value = (status || '').toLowerCase()
+
+    if (value === 'resolved') {
+      return 'bg-emerald-50 text-emerald-700 border-emerald-100'
+    }
+
+    if (value === 'new') {
+      return 'bg-blue-50 text-blue-700 border-blue-100'
+    }
+
+    if (value.includes('review')) {
+      return 'bg-amber-50 text-amber-700 border-amber-100'
+    }
+
+    if (value.includes('escalated')) {
+      return 'bg-rose-50 text-rose-700 border-rose-100'
+    }
+
+    return 'bg-slate-50 text-slate-700 border-slate-200'
+  }
+
+  const getRiskPill = (priority) => {
+    if (priority === 'High') return 'bg-red-50 text-red-700 border-red-100'
+    if (priority === 'Medium') return 'bg-amber-50 text-amber-700 border-amber-100'
+    return 'bg-emerald-50 text-emerald-700 border-emerald-100'
+  }
+
+  const getProgressStepLabel = (report) => {
+    const step = getProgressStep(report)
+    if (step >= 4) return 'Treatment'
+    if (step >= 3) return 'Veterinary Review'
+    if (step >= 2) return 'Risk Assessed'
+    return 'Report Submitted'
+  }
+
+  // =========================================================
+  // CASE DETAIL VIEW
+  // =========================================================
+
+  if (selectedReport) {
+    const report = selectedReport
+    const symptoms = getSymptoms(report.symptoms)
+    const hasGPS =
+      report.latitude !== null &&
+      report.latitude !== undefined &&
+      report.longitude !== null &&
+      report.longitude !== undefined
+    const isMortality = report.report_type === 'mortality'
+    const riskStyle = getRiskStyle(report.priority)
+    const progressStep = getProgressStep(report)
+
+    return (
+      <div className="min-h-screen bg-[#f7f9f8] text-slate-900">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          {/* Back */}
+          <button
+            type="button"
+            onClick={() => setSelectedReport(null)}
+            className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-green-700"
+          >
+            <span className="text-lg">←</span>
+            Back to Dashboard
+          </button>
+
+          {/* Detail header */}
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                  {isMortality ? 'Mortality Report' : getAnimalName(report.animal_type)}
+                  <span className="ml-2 text-slate-400">· Case #{report.id}</span>
+                </h1>
+
+                {report.priority && (
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${getRiskPill(
+                      report.priority
+                    )}`}
+                  >
+                    {getRiskLabel(report.priority)}
+                  </span>
+                )}
+
+                {report.status && (
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusPill(
+                      report.status
+                    )}`}
+                  >
+                    {getStatusLabel(report.status)}
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-2 text-sm text-slate-500">
+                Reported {getReportDate(report)}
+                {report.location ? ` · ${report.location}` : ''}
+              </p>
+            </div>
+
+            <a
+              href={`tel:${VETERINARY_TEAM_PHONE}`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+            >
+              <span>☎</span>
+              {t.callTeam}
+            </a>
+          </div>
+
+          {/* Main detail grid */}
+          <div className="grid gap-5 lg:grid-cols-[180px_minmax(0,1fr)]">
+            {/* Animal */}
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div
+                className={`flex h-28 items-center justify-center rounded-xl ${
+                  isMortality ? 'bg-red-50' : 'bg-green-50'
+                }`}
+              >
+                <span className="text-5xl">
+                  {isMortality ? '!' : getAnimalIcon(report.animal_type)}
+                </span>
+              </div>
+
+              <div className="mt-5 space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    Animal Type
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-800">
+                    {isMortality ? 'Mortality' : getAnimalName(report.animal_type)}
+                  </p>
+                </div>
+
+                {!isMortality && (
+                  <>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        {t.age}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                        {report.animal_age ?? t.notAvailable}{' '}
+                        {report.animal_age !== null && report.animal_age !== undefined
+                          ? t.years
+                          : ''}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        Status
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-800">
+                        {getStatusLabel(report.status)}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              {/* Symptoms */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-sm font-bold text-slate-900">Symptoms</h2>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {symptoms.length > 0 ? (
+                    symptoms.map((symptom) => (
+                      <span
+                        key={symptom}
+                        className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                      >
+                        {getSymptomName(symptom)}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-slate-400">{t.notAvailable}</span>
+                  )}
+                </div>
+              </section>
+
+              {/* Location */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-sm font-bold text-slate-900">{t.location}</h2>
+                <p className="mt-4 text-sm font-medium text-slate-700">
+                  {report.location || t.notAvailable}
+                </p>
+
+                {hasGPS && (
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    {t.gps}: {report.latitude}, {report.longitude}
+                  </p>
+                )}
+              </section>
+
+              {/* Risk */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-bold text-slate-900">Risk Assessment</h2>
+                  {report.priority && (
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${riskStyle.badge}`}
+                    >
+                      {getRiskLabel(report.priority)}
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  {getRiskMessage(report.priority) || t.notAvailable}
+                </p>
+              </section>
+
+              {/* Vaccination */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-sm font-bold text-slate-900">{t.vaccination}</h2>
+                <p className="mt-4 text-sm font-semibold text-slate-700">
+                  {report.vaccination_status || t.notAvailable}
+                </p>
+              </section>
+
+              {/* Treatment */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-sm font-bold text-slate-900">{t.treatment}</h2>
+                <p className="mt-4 text-sm leading-6 text-slate-600">
+                  {report.treatment_history &&
+                  report.treatment_history !== 'No treatment recorded'
+                    ? report.treatment_history
+                    : t.noTreatment}
+                </p>
+              </section>
+
+              {/* Veterinarian */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-sm font-bold text-slate-900">{t.veterinarian}</h2>
+                <p className="mt-4 text-sm font-semibold text-slate-700">
+                  {report.assigned_vet &&
+                  report.assigned_vet !== 'Not Assigned'
+                    ? report.assigned_vet
+                    : t.notAssigned}
+                </p>
+              </section>
+
+              {/* Mortality */}
+              {isMortality && (
+                <section className="rounded-2xl border border-red-100 bg-red-50/40 p-5 shadow-sm md:col-span-2">
+                  <h2 className="text-sm font-bold text-red-800">Mortality Details</h2>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {[
+                      ['Animals died', report.death_count || '—'],
+                      ['Date', report.death_date || '—'],
+                      ['Time', report.death_time || '—'],
+                      ['Suspected cause', report.suspected_cause || t.notAvailable],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-xl border border-red-100 bg-white p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          {label}
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+                      </div>
+                    ))}
                   </div>
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${toneClasses[item.tone]}`}>
-                    {item.icon}
+                </section>
+              )}
+
+              {/* Progress */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:col-span-2">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-bold text-slate-900">Case Progress</h2>
+                  <span className="text-xs font-medium text-slate-400">
+                    {getProgressStepLabel(report)}
                   </span>
                 </div>
-              </div>
-            )
-          })}
-        </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_330px]">
-
-          {/* Main column */}
-          <div className="space-y-6">
-
-            {/* Weather */}
-            <section className="rounded-2xl border-2 border-blue-300 bg-blue-100 p-5 shadow-sm md:p-6">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-2xl">
-                    {weather ? getWeatherIcon(weather.weather) : '🌦️'}
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-slate-900">{t.weatherTitle}</h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {weather?.location ? `${weather.location} • ${t.weatherSubtitle}` : t.weatherSubtitle}
-                    </p>
-                  </div>
-                </div>
-
-                {weatherLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600" />
-                    {t.weatherLoading}
-                  </div>
-                ) : weather ? (
-                  <div className="sm:text-right">
-                    <div className="text-3xl font-bold text-slate-900">{Math.round(weather.temperature)}°C</div>
-                    <p className="mt-1 text-sm capitalize text-slate-500">{weather.description}</p>
-                  </div>
-                ) : null}
-              </div>
-
-              {weather && !weatherLoading && (
-                <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="mt-6 grid grid-cols-4 gap-2">
                   {[
-                    [t.feelsLike, `${Math.round(weather.feels_like)}°C`],
-                    [t.humidity, `${weather.humidity}%`],
-                    [t.wind, `${weather.wind_speed} m/s`],
-                    [t.clouds, `${weather.cloudiness}%`],
-                  ].map(([label, value]) => (
-                    <div key={label} className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-xs font-semibold text-slate-400">{label}</p>
-                      <p className="mt-1 text-base font-bold text-slate-800">{value}</p>
+                    [1, t.submitted],
+                    [2, t.riskAssessed],
+                    [3, t.vetReview],
+                    [4, t.treatmentStarted],
+                  ].map(([step, label]) => (
+                    <div key={step} className="relative text-center">
+                      <div
+                        className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                          progressStep >= step
+                            ? 'border-green-600 bg-green-600 text-white'
+                            : 'border-slate-200 bg-white text-slate-400'
+                        }`}
+                      >
+                        {progressStep >= step ? '✓' : step}
+                      </div>
+                      <p className="mx-auto mt-2 max-w-[110px] text-[10px] font-medium leading-4 text-slate-500 sm:text-xs">
+                        {label}
+                      </p>
                     </div>
                   ))}
                 </div>
-              )}
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-              {weatherError && (
-                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  {weatherError}
-                </div>
-              )}
+  // =========================================================
+  // DASHBOARD
+  // =========================================================
 
-              <p className="mt-4 text-xs leading-5 text-slate-400">ℹ️ {t.environmentalNote}</p>
-            </section>
+  return (
+    <div className="min-h-screen bg-[#f7f9f8] text-slate-900">
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
 
-            {/* Recent cases */}
-            <section>
-              <div className="mb-4 flex items-end justify-between">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="mb-1 text-sm font-semibold text-green-700">PashuMitra</p>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                {t.title}
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">
+                {t.description}
+              </p>
+            </div>
+
+            {weather && (
+              <div className="flex items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3">
+                <span className="text-xl">{getWeatherIcon(weather.weather)}</span>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">{t.recentCases}</h2>
-                  <p className="mt-1 text-sm text-slate-500">{totalCases} {t.totalCases.toLowerCase()}</p>
+                  <p className="text-xs font-medium text-slate-400">
+                    {weather.location || 'Local weather'}
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {Math.round(weather.temperature)}°C
+                    <span className="ml-2 text-xs font-medium text-slate-500">
+                      {weather.description}
+                    </span>
+                  </p>
                 </div>
               </div>
+            )}
+          </div>
+        </header>
 
-              {reports.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-2xl">📋</div>
-                  <h3 className="mt-4 font-semibold text-slate-700">{t.noReports}</h3>
+        {/* Summary cards */}
+        <section className="mb-5 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-400 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t.totalCases}
+                </p>
+                <p className="mt-2 text-3xl font-bold tracking-tight text-green-700">
+                  {totalCases}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Total animal health reports
+                </p>
+              </div>
+
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-green-200 bg-green-50 text-xl text-green-700">
+                ▤
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-400 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t.highRisk}
+                </p>
+                <p className="mt-2 text-3xl font-bold tracking-tight text-red-600">
+                  {highRiskCases}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Cases need attention
+                </p>
+              </div>
+
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-xl text-red-600">
+                !
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Weather context */}
+        {weather && !weatherLoading && (
+          <section className="mb-5 rounded-2xl border border-slate-300 bg-[#e8f4ff] px-5 py-4">
+            <div className="flex flex-wrap items-center gap-x-7 gap-y-3">
+              <div className="min-w-[150px]">
+                <p className="text-sm font-bold text-slate-800">Weather context</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Environmental conditions near the reported location
+                </p>
+              </div>
+
+              <div className="h-10 w-px bg-slate-300" />
+
+              <div>
+                <p className="text-xs text-slate-500">{t.feelsLike}</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {Math.round(weather.feels_like)}°C
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-500">{t.humidity}</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {weather.humidity}%
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-500">{t.wind}</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {weather.wind_speed} m/s
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-500">{t.clouds}</p>
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {weather.cloudiness}%
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-3 text-xs text-slate-500">
+              {t.environmentalNote}
+            </p>
+          </section>
+        )}
+
+        {weatherError && (
+          <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {weatherError}
+          </div>
+        )}
+
+        {/* Recent reports */}
+        <section className="overflow-hidden rounded-2xl border border-slate-400 bg-white">
+          <div className="flex flex-col gap-2 border-b border-slate-300 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-950">
+                Recent Reports
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Select a case to view its full health record.
+              </p>
+            </div>
+
+            <span className="text-sm font-semibold text-green-700">
+              {totalCases} total cases
+            </span>
+          </div>
+
+          {reports.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                ▤
+              </div>
+              <h3 className="mt-4 font-semibold text-slate-800">
+                {t.noReports}
+              </h3>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="min-w-[820px]">
+
+                {/* Column headings */}
+                <div className="grid grid-cols-[1.45fr_1.45fr_0.75fr_1fr_0.9fr_36px] items-center border-b border-slate-300 bg-slate-50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-slate-500 sm:px-6">
+                  <div>Animal</div>
+                  <div>Symptoms</div>
+                  <div>Risk Level</div>
+                  <div>Status</div>
+                  <div>Date</div>
+                  <div />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {reports.map((report) => {
-                    const riskStyle = getRiskStyle(report.priority)
+
+                {/* Report rows */}
+                <div>
+                  {reports.slice(0, 8).map((report) => {
+                    const isMortality = report.report_type === 'mortality'
                     const symptoms = getSymptoms(report.symptoms)
-                    const progressStep = getProgressStep(report)
-                    const hasGPS =
-                      report.latitude !== null &&
-                      report.latitude !== undefined &&
-                      report.longitude !== null &&
-                      report.longitude !== undefined
 
                     return (
-                      <article
-  key={report.id}
-  className={`overflow-hidden rounded-2xl border border-slate-200 border-l-4 bg-white shadow-sm ${
-    report.priority === 'High'
-      ? 'border-l-red-500'
-      : report.priority === 'Medium'
-      ? 'border-l-orange-500'
-      : 'border-l-green-500'
-  }`}
->
-                        <div className="p-5 md:p-6">
-                          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-50 text-2xl">
-                                {getAnimalIcon(report.animal_type)}
-                              </div>
-                              <div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <h3 className="font-bold text-slate-900">
-                                    {getAnimalName(report.animal_type)}
-                                  </h3>
-                                  <span className="text-xs text-slate-400">Case #{report.id}</span>
-                                </div>
-                                <p className="mt-1 text-sm text-slate-500">
-                                  {t.age}: <span className="font-medium text-slate-700">{report.animal_age} {t.years}</span>
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              <span className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold ${riskStyle.badge}`}>
-                                <span className={`h-2 w-2 rounded-full ${riskStyle.dot}`} />
-                                {getRiskLabel(report.priority)}
-                              </span>
-                              <span className={`rounded-lg border px-3 py-2 text-xs font-bold ${getStatusStyle(report.status)}`}>
-                                {getStatusLabel(report.status)}
-                              </span>
-                            </div>
+                      <div
+                        key={report.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setSelectedReport(report)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            setSelectedReport(report)
+                          }
+                        }}
+                        className="group grid cursor-pointer grid-cols-[1.45fr_1.45fr_0.75fr_1fr_0.9fr_36px] items-center border-b border-slate-200 px-5 py-4 transition hover:bg-slate-50 sm:px-6"
+                      >
+                        {/* Animal */}
+                        <div className="flex min-w-0 items-center gap-3 pr-4">
+                          <div
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${
+                              isMortality
+                                ? 'border-red-100 bg-red-50'
+                                : 'border-green-100 bg-green-50'
+                            } text-lg`}
+                          >
+                            {isMortality ? '!' : getAnimalIcon(report.animal_type)}
                           </div>
 
-                          {report.priority && (
-                            <div className={`mt-5 rounded-xl border p-4 ${riskStyle.border} ${riskStyle.background}`}>
-                              <div className="flex items-start gap-3">
-                                <span className="text-lg">
-                                  {report.priority === 'High' ? '🚨' : report.priority === 'Medium' ? '⚠️' : '✓'}
-                                </span>
-                                <div>
-                                  <p className="text-sm font-semibold text-slate-800">
-                                    {t.riskLevel}: {getRiskLabel(report.priority)}
-                                  </p>
-                                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                                    {getRiskMessage(report.priority)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-800">
+                              {isMortality
+                                ? 'Mortality Report'
+                                : getAnimalName(report.animal_type)}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              Case #{report.id}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Symptoms */}
+                        <div className="min-w-0 pr-4">
+                          <p className="truncate text-sm text-slate-600">
+                            {symptoms[0]
+                              ? getSymptomName(symptoms[0])
+                              : isMortality
+                                ? `${report.death_count || 1} animal(s) reported dead`
+                                : t.notAvailable}
+                          </p>
+                        </div>
+
+                        {/* Risk */}
+                        <div>
+                          {report.priority ? (
+                            <span
+                              className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-semibold ${getRiskPill(
+                                report.priority
+                              )}`}
+                            >
+                              {getRiskLabel(report.priority).replace(' Risk', '')}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
                           )}
-
-                          <div className="mt-4 grid gap-3 md:grid-cols-2">
-                            <div className="rounded-xl border border-slate-200 p-4">
-                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{t.symptoms}</p>
-                              <div className="flex flex-wrap gap-2">
-                                {symptoms.length > 0 ? symptoms.map((symptom) => (
-                                  <span key={symptom} className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                                    {getSymptomName(symptom)}
-                                  </span>
-                                )) : (
-                                  <span className="text-sm text-slate-400">{t.notAvailable}</span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="rounded-xl border border-slate-200 p-4">
-                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{t.location}</p>
-                              <p className="text-sm font-medium text-slate-700">📍 {report.location || t.notAvailable}</p>
-                              <p className="mt-2 text-xs text-slate-500">
-                                {t.gps}: {hasGPS ? `${report.latitude}, ${report.longitude}` : t.notAvailable}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="mt-3 grid gap-3 md:grid-cols-3">
-                            <div className="rounded-xl border border-slate-200 p-4">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">💉 {t.vaccination}</p>
-                              <p className="mt-2 text-sm font-semibold text-slate-700">{report.vaccination_status || t.notAvailable}</p>
-                            </div>
-                            <div className="rounded-xl border border-slate-200 p-4">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">💊 {t.treatment}</p>
-                              <p className="mt-2 text-sm font-semibold text-slate-700">
-                                {report.treatment_history && report.treatment_history !== 'No treatment recorded'
-                                  ? report.treatment_history
-                                  : t.noTreatment}
-                              </p>
-                            </div>
-                            <div className="rounded-xl border border-slate-200 p-4">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">👨‍⚕️ {t.veterinarian}</p>
-                              <p className="mt-2 text-sm font-semibold text-slate-700">
-                                {report.assigned_vet && report.assigned_vet !== 'Not Assigned'
-                                  ? report.assigned_vet
-                                  : t.notAssigned}
-                              </p>
-                            </div>
-                          </div>
                         </div>
 
-                        <div className="border-t border-slate-100 bg-slate-50 px-5 py-5 md:px-6">
-                          <p className="mb-4 text-sm font-semibold text-slate-700">{t.status}</p>
-                          <div className="grid grid-cols-4 gap-2">
-                            {[
-                              [1, t.submitted],
-                              [2, t.riskAssessed],
-                              [3, t.vetReview],
-                              [4, t.treatmentStarted],
-                            ].map(([step, label]) => (
-                              <div key={step} className="text-center">
-                                <div
-                                  className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                                    progressStep >= step
-                                      ? step === 3 ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'
-                                      : 'bg-slate-200 text-slate-400'
-                                  }`}
-                                >
-                                  {progressStep >= step ? '✓' : step}
-                                </div>
-                                <p className="mt-2 text-[11px] leading-4 text-slate-500 md:text-xs">{label}</p>
-                              </div>
-                            ))}
-                          </div>
+                        {/* Status */}
+                        <div>
+                          <span
+                            className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-semibold ${getStatusPill(
+                              report.status
+                            )}`}
+                          >
+                            {getStatusLabel(report.status)}
+                          </span>
                         </div>
-                      </article>
+
+                        {/* Date */}
+                        <div className="text-sm text-slate-500">
+                          {getReportDate(report)}
+                        </div>
+
+                        {/* Open */}
+                        <div className="text-lg text-slate-300 transition group-hover:text-green-600">
+                          →
+                        </div>
+                      </div>
                     )
                   })}
                 </div>
-              )}
-            </section>
-          </div>
-
-          {/* Side column */}
-          <aside className="space-y-6">
-            <section className="rounded-2xl border border-green-100 bg-white p-5 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-xl">👨‍⚕️</div>
-                <div>
-                  <h2 className="font-bold text-slate-900">{t.veterinarySupport}</h2>
-                  <p className="mt-1 text-sm leading-5 text-slate-500">{t.veterinarySupportText}</p>
-                </div>
               </div>
+            </div>
+          )}
+        </section>
 
-              <div className="mt-5 space-y-2">
-                <a
-                  href={`tel:${VETERINARY_TEAM_PHONE}`}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
-                >
-                  📞 {t.callTeam}
-                </a>
-                <button
-                  type="button"
-                  onClick={() => alert(t.callbackReceived)}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-green-200 bg-white px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-50"
-                >
-                  🔔 {t.requestCallback}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => alert(t.emergencyText)}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100"
-                >
-                  🚨 {t.emergencyHelp}
-                </button>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-green-600">PashuMitra</p>
-              <h2 className="mt-2 text-lg font-bold text-slate-900">Case overview</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Track reported animals, risk priority, veterinary review and treatment progress from one place.
-              </p>
-
-              <div className="mt-5 space-y-3">
-                {[
-                  ['01', 'Reports', totalCases],
-                  ['02', 'High risk', highRiskCases],
-                  ['03', 'Pending', pendingCases],
-                  ['04', 'Resolved', resolvedCases],
-                ].map(([number, label, value]) => (
-                  <div key={number} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-[11px] font-bold text-slate-500">{number}</span>
-                      <span className="text-sm font-medium text-slate-700">{label}</span>
-                    </div>
-                    <span className="text-sm font-bold text-slate-900">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </aside>
-        </div>
+        {reports.length > 8 && (
+          <p className="mt-3 text-center text-xs text-slate-400">
+            Showing the latest 8 reports. Use the Reports/Health Records section for the complete history.
+          </p>
+        )}
       </div>
     </div>
   )
