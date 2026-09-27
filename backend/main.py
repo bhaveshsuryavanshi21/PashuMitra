@@ -128,11 +128,42 @@ def calculate_risk(animal_age, symptoms):
 
 
 # --------------------------------------------------
+# CASE LIFECYCLE
+# --------------------------------------------------
+
+# Current and supported case states.
+# Legacy values are kept so existing records continue to work.
+CASE_STATUSES = {
+    "New",
+    "Escalated",
+    "Under Review",
+    "Visit Scheduled",
+    "In Treatment",
+    "Resolved",
+    # Legacy value used by older records
+    "Pending",
+}
+
+
+def validate_case_status(status):
+    if status not in CASE_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Invalid case status",
+                "allowed_statuses": sorted(CASE_STATUSES),
+            },
+        )
+
+
+# --------------------------------------------------
 # CREATE ANIMAL REPORT
 # --------------------------------------------------
 
 @app.post("/report")
 def create_report(report: dict):
+
+    print("REPORT PAYLOAD:", report)
 
     # Accept the current React camelCase payload.
     # Also accept the older snake_case format.
@@ -145,8 +176,35 @@ def create_report(report: dict):
     if animal_age is None:
         animal_age = report.get("animal_age")
 
-    symptoms = report.get("symptoms")
+    # Age is optional for mortality reports. Treat an empty form field as None.
+    if animal_age == "":
+        animal_age = None
+
+    symptoms = report.get("symptoms") or []
     location = report.get("location")
+
+    # Mortality-specific details.
+    death_count = report.get("deathCount")
+    if death_count is None:
+        death_count = report.get("death_count")
+
+    death_date = report.get("deathDate")
+    if death_date is None:
+        death_date = report.get("death_date")
+
+    death_time = report.get("deathTime")
+    if death_time is None:
+        death_time = report.get("death_time")
+
+    suspected_cause = report.get("suspectedCause") or report.get("suspected_cause")
+    additional_notes = report.get("additionalNotes") or report.get("additional_notes")
+
+    # Distinguish normal health reports from mortality reports.
+    report_type = (
+        report.get("reportType")
+        or report.get("report_type")
+        or "health_issue"
+    )
 
     latitude = report.get("latitude")
     longitude = report.get("longitude")
@@ -157,20 +215,53 @@ def create_report(report: dict):
             detail="Animal type is required"
         )
 
-    if animal_age is None:
+    if report_type not in {"health_issue", "mortality"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid report type"
+        )
+
+    if animal_age is None and report_type == "health_issue":
         raise HTTPException(
             status_code=400,
             detail="Animal age is required"
         )
 
-    if not symptoms:
+    if report_type == "mortality":
+        if death_count is None:
+            raise HTTPException(status_code=400, detail="Number of animals died is required")
+
+        try:
+            death_count_value = int(death_count)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Number of animals died must be a valid number")
+
+        if death_count_value < 1:
+            raise HTTPException(status_code=400, detail="Number of animals died must be at least 1")
+
+        if not death_date:
+            raise HTTPException(status_code=400, detail="Date of death is required")
+
+        # A mortality report needs a location, either as a typed place
+        # or through captured GPS coordinates.
+        if not location and (latitude is None or longitude is None):
+            raise HTTPException(
+                status_code=400,
+                detail="Location or GPS coordinates are required for mortality reports"
+            )
+    else:
+        death_count_value = None
+
+    # Symptoms are required for health-issue reports,
+    # but optional for mortality reports.
+    if report_type == "health_issue" and not symptoms:
         raise HTTPException(
             status_code=400,
             detail="Symptoms are required"
         )
 
     try:
-        animal_age_value = float(animal_age)
+        animal_age_value = float(animal_age) if animal_age is not None else None
     except (TypeError, ValueError):
         raise HTTPException(
             status_code=400,
@@ -180,10 +271,18 @@ def create_report(report: dict):
     if not isinstance(symptoms, list):
         symptoms = [symptoms]
 
-    score, priority, reasons = calculate_risk(
-        animal_age_value,
-        symptoms
-    )
+    if report_type == "mortality":
+        score = 100
+        priority = "High"
+        reasons = [
+            "Animal mortality reported",
+            "Mortality report requires veterinary surveillance"
+        ]
+    else:
+        score, priority, reasons = calculate_risk(
+            animal_age_value,
+            symptoms
+        )
 
     # Your existing PostgreSQL 'symptoms' column is kept as text.
     symptoms_for_db = ", ".join(
@@ -209,9 +308,16 @@ def create_report(report: dict):
                 location,
                 priority,
                 latitude,
-                longitude
+                longitude,
+                status,
+                report_type,
+                death_count,
+                death_date,
+                death_time,
+                suspected_cause,
+                additional_notes
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             (
@@ -221,7 +327,15 @@ def create_report(report: dict):
                 location,
                 priority,
                 latitude,
-                longitude
+                longitude,
+                # High-risk reports are automatically escalated.
+                "Escalated" if priority == "High" else "New",
+                report_type,
+                death_count_value,
+                death_date,
+                death_time,
+                suspected_cause,
+                additional_notes
             )
         )
 
@@ -234,7 +348,14 @@ def create_report(report: dict):
             "report_id": report_id,
             "risk_score": score,
             "priority": priority,
-            "reasons": reasons
+            "reasons": reasons,
+            "status": "Escalated" if priority == "High" else "New",
+            "report_type": report_type,
+            "death_count": death_count_value,
+            "death_date": death_date,
+            "death_time": death_time,
+            "suspected_cause": suspected_cause,
+            "additional_notes": additional_notes
         }
 
     except Exception as e:
@@ -281,7 +402,14 @@ def get_reports():
                 longitude,
                 vaccination_status,
                 treatment_history,
-                assigned_vet
+                assigned_vet,
+                report_type,
+                death_count,
+                death_date,
+                death_time,
+                suspected_cause,
+                additional_notes,
+                vaccination_due_date
             FROM animal_reports
             ORDER BY created_at DESC
             """
@@ -296,6 +424,21 @@ def get_reports():
 
         for row in rows:
 
+            # Recalculate the same risk reasons for existing reports so
+            # the Vet Dashboard can explain why the case has its priority.
+            report_type = row[13] or "health_issue"
+
+            if report_type == "mortality":
+                reasons = [
+                    "Animal mortality reported",
+                    "Mortality report requires veterinary surveillance"
+                ]
+            else:
+                _, calculated_priority, reasons = calculate_risk(
+                    float(row[2]),
+                    [item.strip() for item in str(row[3] or "").split(",") if item.strip()]
+                )
+
             reports.append({
                 "id": row[0],
                 "animal_type": row[1],
@@ -309,7 +452,15 @@ def get_reports():
                 "longitude": row[9],
                 "vaccination_status": row[10],
                 "treatment_history": row[11],
-                "assigned_vet": row[12]
+                "assigned_vet": row[12],
+                "reasons": reasons,
+                "report_type": report_type,
+                "death_count": row[14],
+                "death_date": row[15],
+                "death_time": row[16],
+                "suspected_cause": row[17],
+                "additional_notes": row[18],
+                "vaccination_due_date": row[19]
             })
 
         return reports
@@ -337,6 +488,8 @@ def update_status(report_id: int, data: dict):
             detail="Status is required"
         )
 
+    validate_case_status(status)
+
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -356,8 +509,13 @@ def update_status(report_id: int, data: dict):
         conn.close()
 
         return {
-            "message": "Status updated successfully"
+            "message": "Status updated successfully",
+            "report_id": report_id,
+            "status": status
         }
+
+    except HTTPException:
+        raise
 
     except Exception as e:
 
@@ -365,6 +523,91 @@ def update_status(report_id: int, data: dict):
             status_code=500,
             detail=f"Database error: {str(e)}"
         )
+
+
+# --------------------------------------------------
+# ESCALATE CASE
+# --------------------------------------------------
+
+@app.put("/report/{report_id}/escalate")
+def escalate_case(report_id: int):
+    """Escalate a high-risk case for priority veterinary action."""
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT priority, status
+            FROM animal_reports
+            WHERE id = %s
+            """,
+            (report_id,)
+        )
+
+        row = cursor.fetchone()
+
+        if not row:
+            raise HTTPException(
+                status_code=404,
+                detail="Case not found"
+            )
+
+        priority, current_status = row
+
+        if current_status == "Resolved":
+            raise HTTPException(
+                status_code=400,
+                detail="A resolved case cannot be escalated"
+            )
+
+        if priority != "High":
+            raise HTTPException(
+                status_code=400,
+                detail="Only high-risk cases can be escalated automatically"
+            )
+
+        cursor.execute(
+            """
+            UPDATE animal_reports
+            SET status = %s
+            WHERE id = %s
+            """,
+            ("Escalated", report_id)
+        )
+
+        conn.commit()
+
+        return {
+            "message": "Case escalated successfully",
+            "report_id": report_id,
+            "status": "Escalated"
+        }
+
+    except HTTPException:
+        if conn:
+            conn.rollback()
+        raise
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
 
 
 # --------------------------------------------------
@@ -377,6 +620,9 @@ def update_vaccination(report_id: int, data: dict):
     vaccination_status = data.get(
         "vaccination_status"
     )
+    vaccination_due_date = data.get(
+        "vaccination_due_date"
+    )
 
     try:
         conn = get_connection()
@@ -385,11 +631,13 @@ def update_vaccination(report_id: int, data: dict):
         cursor.execute(
             """
             UPDATE animal_reports
-            SET vaccination_status = %s
+            SET vaccination_status = %s,
+                vaccination_due_date = %s
             WHERE id = %s
             """,
             (
                 vaccination_status,
+                vaccination_due_date,
                 report_id
             )
         )
@@ -400,7 +648,9 @@ def update_vaccination(report_id: int, data: dict):
         conn.close()
 
         return {
-            "message": "Vaccination status updated successfully"
+            "message": "Vaccination status and due date updated successfully",
+            "vaccination_status": vaccination_status,
+            "vaccination_due_date": vaccination_due_date
         }
 
     except Exception as e:

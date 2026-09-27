@@ -48,13 +48,28 @@ function VetDashboard({ language }) {
       veterinarian3: 'Veterinarian 3',
 
       pendingStatus: 'Pending',
+      newStatus: 'New',
       underReview: 'Under Review',
       visitScheduled: 'Visit Scheduled',
+      inTreatment: 'In Treatment',
+      escalated: 'Escalated',
       resolved: 'Resolved',
+      escalateCase: 'Escalate Case',
+      escalationRequired: 'High-risk case requires priority veterinary action.',
+      caseLifecycle: 'Case Lifecycle',
 
       noReports: 'No cases available.',
       locationCaptured: 'GPS location captured',
       noLocation: 'Location not available',
+
+      mortality: 'MORTALITY REPORT',
+      mortalityDetails: 'Mortality Details',
+      animalsDied: 'Animals Died',
+      deathDate: 'Date of Death',
+      deathTime: 'Time of Death',
+      suspectedCause: 'Suspected Cause',
+      additionalNotes: 'Additional Notes',
+      symptomsBeforeDeath: 'Symptoms Before Death',
     },
 
     hi: {
@@ -100,13 +115,28 @@ function VetDashboard({ language }) {
       veterinarian3: 'पशु चिकित्सक 3',
 
       pendingStatus: 'लंबित',
+      newStatus: 'नया',
       underReview: 'समीक्षा के अधीन',
       visitScheduled: 'भ्रमण निर्धारित',
+      inTreatment: 'उपचार जारी',
+      escalated: 'एस्केलेटेड',
       resolved: 'समाधान किया गया',
+      escalateCase: 'मामला एस्केलेट करें',
+      escalationRequired: 'उच्च जोखिम वाले मामले में प्राथमिकता से पशु चिकित्सा कार्रवाई आवश्यक है।',
+      caseLifecycle: 'मामले का चरण',
 
       noReports: 'कोई मामला उपलब्ध नहीं है।',
       locationCaptured: 'जीपीएस स्थान प्राप्त हुआ',
       noLocation: 'स्थान उपलब्ध नहीं है',
+
+      mortality: 'मृत्यु रिपोर्ट',
+      mortalityDetails: 'मृत्यु का विवरण',
+      animalsDied: 'मृत पशुओं की संख्या',
+      deathDate: 'मृत्यु की तारीख',
+      deathTime: 'मृत्यु का समय',
+      suspectedCause: 'संदिग्ध कारण',
+      additionalNotes: 'अतिरिक्त जानकारी',
+      symptomsBeforeDeath: 'मृत्यु से पहले के लक्षण',
     },
 
     mr: {
@@ -152,13 +182,28 @@ function VetDashboard({ language }) {
       veterinarian3: 'पशुवैद्य 3',
 
       pendingStatus: 'प्रलंबित',
+      newStatus: 'नवीन',
       underReview: 'तपासणी सुरू',
       visitScheduled: 'भेट निश्चित',
+      inTreatment: 'उपचार सुरू',
+      escalated: 'तातडीने वाढवलेले',
       resolved: 'निराकरण झाले',
+      escalateCase: 'प्रकरण तातडीने पाठवा',
+      escalationRequired: 'उच्च-धोका प्रकरणासाठी प्राधान्याने पशुवैद्यकीय कारवाई आवश्यक आहे.',
+      caseLifecycle: 'प्रकरणाचा टप्पा',
 
       noReports: 'कोणतेही प्रकरण उपलब्ध नाही.',
       locationCaptured: 'जीपीएस स्थान मिळाले',
       noLocation: 'स्थान उपलब्ध नाही',
+
+      mortality: 'मृत्यू अहवाल',
+      mortalityDetails: 'मृत्यूचा तपशील',
+      animalsDied: 'मृत प्राण्यांची संख्या',
+      deathDate: 'मृत्यूची तारीख',
+      deathTime: 'मृत्यूची वेळ',
+      suspectedCause: 'संशयित कारण',
+      additionalNotes: 'अतिरिक्त माहिती',
+      symptomsBeforeDeath: 'मृत्यूपूर्वीची लक्षणे',
     },
   }
 
@@ -216,7 +261,8 @@ function VetDashboard({ language }) {
   ).length
 
   const pendingCases = reports.filter(
-    (report) => report.status === 'Pending'
+    (report) =>
+      !['Resolved'].includes(report.status)
   ).length
 
   const updateStatus = (reportId, newStatus) => {
@@ -259,6 +305,88 @@ function VetDashboard({ language }) {
       .catch((error) => {
         console.error('Failed to update status:', error)
       })
+  }
+
+  const escalateCase = (reportId) => {
+    fetch(
+      `${API_BASE_URL}/report/${reportId}/escalate`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+      .then(async (response) => {
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Failed to escalate case')
+        }
+
+        return data
+      })
+      .then((data) => {
+        console.log(data)
+
+        setReports((currentReports) =>
+          currentReports.map((item) =>
+            item.id === reportId
+              ? {
+                  ...item,
+                  status: 'Escalated',
+                }
+              : item
+          )
+        )
+
+        setSelectedReport((current) =>
+          current && current.id === reportId
+            ? {
+                ...current,
+                status: 'Escalated',
+              }
+            : current
+        )
+      })
+      .catch((error) => {
+        console.error('Failed to escalate case:', error)
+        alert(error.message)
+      })
+  }
+
+  const getLifecycleStep = (status) => {
+    const steps = {
+      New: 1,
+      Pending: 1,
+      'Under Review': 2,
+      'Visit Scheduled': 3,
+      'In Treatment': 4,
+      Escalated: 2,
+      Resolved: 5,
+    }
+
+    return steps[status] || 1
+  }
+
+  const lifecycleSteps = [
+    'New',
+    'Under Review',
+    'Visit Scheduled',
+    'In Treatment',
+    'Resolved',
+  ]
+
+  const getLifecycleLabel = (step) => {
+    const labels = {
+      New: t.newStatus,
+      'Under Review': t.underReview,
+      'Visit Scheduled': t.visitScheduled,
+      'In Treatment': t.inTreatment,
+      Resolved: t.resolved,
+    }
+
+    return labels[step] || step
   }
 
   const assignVet = (reportId, vet) => {
@@ -375,6 +503,14 @@ function VetDashboard({ language }) {
   const getStatusClasses = (status) => {
     if (status === 'Resolved') {
       return 'bg-green-100 text-green-700'
+    }
+
+    if (status === 'Escalated') {
+      return 'bg-red-100 text-red-700'
+    }
+
+    if (status === 'In Treatment') {
+      return 'bg-emerald-100 text-emerald-700'
     }
 
     if (status === 'Visit Scheduled') {
@@ -633,7 +769,13 @@ function VetDashboard({ language }) {
 
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+
+                      {selectedReport.report_type === 'mortality' && (
+                        <span className="px-3 py-2 rounded-full text-sm font-bold bg-red-600 text-white">
+                          🚨 {t.mortality}
+                        </span>
+                      )}
 
                       <span
                         className={`px-3 py-2 rounded-full text-sm font-bold ${
@@ -688,17 +830,199 @@ function VetDashboard({ language }) {
                           {t.riskAssessment}: {selectedReport.priority}
                         </p>
 
+                      
                         <p className="text-sm text-slate-600 mt-1">
-                          {selectedReport.priority === 'High'
-                            ? t.urgent
-                            : t.monitor}
-                        </p>
+  {selectedReport.priority === 'High'
+    ? t.urgent
+    : t.monitor}
+</p>
+
+{selectedReport.reasons?.length > 0 && (
+  <div className="mt-4">
+    <p className="text-sm font-semibold text-slate-700 mb-2">
+      Why this risk level?
+    </p>
+
+    <ul className="space-y-1">
+      {selectedReport.reasons.map((reason, index) => (
+        <li
+          key={index}
+          className="text-sm text-slate-600 flex items-start gap-2"
+        >
+          <span className="text-emerald-600">•</span>
+          <span>{reason}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
+                        {selectedReport.priority === 'High' &&
+                          selectedReport.status !== 'Resolved' && (
+                            <p className="text-sm font-semibold text-red-700 mt-2">
+                              {t.escalationRequired}
+                            </p>
+                          )}
 
                       </div>
 
                     </div>
 
                   </div>
+
+                  {/* Case Lifecycle */}
+                  <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+                    <div className="flex items-center justify-between gap-3 mb-5">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                          {t.caseLifecycle}
+                        </p>
+                        <p className="text-sm text-slate-600 mt-1">
+                          {selectedReport.status}
+                        </p>
+                      </div>
+
+                      {selectedReport.priority === 'High' &&
+                        selectedReport.status !== 'Resolved' &&
+                        selectedReport.status !== 'Escalated' && (
+                          <button
+                            type="button"
+                            onClick={() => escalateCase(selectedReport.id)}
+                            className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                          >
+                            🚨 {t.escalateCase}
+                          </button>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2">
+                      {lifecycleSteps.map((step, index) => {
+                        const currentStep = getLifecycleStep(
+                          selectedReport.status
+                        )
+                        const stepNumber = index + 1
+                        const completed = currentStep >= stepNumber
+
+                        return (
+                          <div key={step} className="text-center">
+                            <div
+                              className={`h-2 rounded-full ${
+                                completed
+                                  ? 'bg-emerald-500'
+                                  : 'bg-slate-200'
+                              }`}
+                            />
+
+                            <p
+                              className={`text-[11px] sm:text-xs mt-2 font-medium ${
+                                completed
+                                  ? 'text-slate-800'
+                                  : 'text-slate-400'
+                              }`}
+                            >
+                              {getLifecycleLabel(step)}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {selectedReport.status === 'Escalated' && (
+                      <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {t.escalationRequired}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mortality Details */}
+                  {selectedReport.report_type === 'mortality' && (
+                    <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-5">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="bg-red-600 text-white rounded-lg p-2 text-lg">
+                          🚨
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-red-600 font-semibold">
+                            {t.mortality}
+                          </p>
+                          <h3 className="text-xl font-bold text-slate-800 mt-1">
+                            {t.mortalityDetails}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white rounded-xl p-4 border border-red-100">
+                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                            {t.animalsDied}
+                          </p>
+                          <p className="text-2xl font-bold text-red-700 mt-2">
+                            {selectedReport.death_count ?? '—'}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-4 border border-red-100">
+                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                            {t.suspectedCause}
+                          </p>
+                          <p className="text-lg font-semibold text-slate-800 mt-2">
+                            {selectedReport.suspected_cause || '—'}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-4 border border-red-100">
+                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                            {t.deathDate}
+                          </p>
+                          <p className="text-lg font-semibold text-slate-800 mt-2">
+                            {selectedReport.death_date || '—'}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-4 border border-red-100">
+                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                            {t.deathTime}
+                          </p>
+                          <p className="text-lg font-semibold text-slate-800 mt-2">
+                            {selectedReport.death_time || '—'}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-4 border border-red-100 md:col-span-2">
+                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                            {t.symptomsBeforeDeath}
+                          </p>
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {(selectedReport.symptoms || '')
+                              .split(',')
+                              .filter(Boolean)
+                              .map((symptom, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-slate-50 border border-slate-200 px-3 py-1 rounded-full text-sm text-slate-700"
+                                >
+                                  {symptom.replaceAll('_', ' ')}
+                                </span>
+                              ))}
+                            {!(selectedReport.symptoms || '')
+                              .split(',')
+                              .filter(Boolean).length && (
+                              <span className="text-sm text-slate-500">—</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-4 border border-red-100 md:col-span-2">
+                          <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+                            {t.additionalNotes}
+                          </p>
+                          <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap">
+                            {selectedReport.additional_notes || '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Information Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -715,7 +1039,7 @@ function VetDashboard({ language }) {
                       </p>
 
                       <p className="text-sm text-slate-600 mt-1">
-                        {t.age}: {selectedReport.animal_age} {t.years}
+                        {t.age}: {selectedReport.animal_age ?? '—'} {selectedReport.animal_age != null ? t.years : ''}
                       </p>
 
                     </div>
@@ -740,6 +1064,12 @@ function VetDashboard({ language }) {
                               {symptom.replaceAll('_', ' ')}
                             </span>
                           ))}
+
+                        {!(selectedReport.symptoms || '')
+                          .split(',')
+                          .filter(Boolean).length && (
+                          <span className="text-sm text-slate-500">—</span>
+                        )}
 
                       </div>
 
@@ -774,7 +1104,7 @@ function VetDashboard({ language }) {
                       </p>
 
                       <p className="text-lg font-semibold text-slate-800 mt-2">
-                        {selectedReport.vaccination_status}
+                        {selectedReport.vaccination_status || '—'}
                       </p>
 
                     </div>
@@ -818,6 +1148,10 @@ function VetDashboard({ language }) {
                           }
                           className="w-full border border-slate-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
+                          <option value="New">
+                            {t.newStatus}
+                          </option>
+
                           <option value="Pending">
                             {t.pendingStatus}
                           </option>
@@ -828,6 +1162,14 @@ function VetDashboard({ language }) {
 
                           <option value="Visit Scheduled">
                             {t.visitScheduled}
+                          </option>
+
+                          <option value="In Treatment">
+                            {t.inTreatment}
+                          </option>
+
+                          <option value="Escalated">
+                            {t.escalated}
                           </option>
 
                           <option value="Resolved">

@@ -15,6 +15,8 @@ function OutbreakMap({ language }) {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [riskFilter, setRiskFilter] = useState('All')
+  const [surveillanceLevel, setSurveillanceLevel] = useState('District')
+  const [selectedSurveillanceArea, setSelectedSurveillanceArea] = useState('All')
 
   const [weather, setWeather] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
@@ -76,6 +78,24 @@ function OutbreakMap({ language }) {
       weatherLoading: 'Loading weather...',
       environmentalNote:
         'Weather is environmental context only and is not a disease diagnosis.',
+      surveillanceTitle: 'Surveillance Level',
+      surveillanceDescription: 'View livestock health activity by administrative level.',
+      district: 'District',
+      block: 'Block',
+      village: 'Village',
+      allAreas: 'All Areas',
+      selectedArea: 'Selected Area',
+      surveillanceCases: 'Cases',
+      surveillanceHighRisk: 'High Risk',
+      surveillanceHotspots: 'Hotspots',
+      areaNote: 'Current area grouping uses the location text available in submitted reports.',
+      trendsTitle: 'Historical Disease Trends',
+      trendsDescription: 'Track reported cases over time using the dates available in reports.',
+      noTrendData: 'No dated reports are available for trend analysis.',
+      cases: 'Cases',
+      mortality: 'Mortality',
+      highRiskCases: 'High Risk Cases',
+      month: 'Month',
     },
 
     hi: {
@@ -133,6 +153,24 @@ function OutbreakMap({ language }) {
       weatherLoading: 'मौसम लोड हो रहा है...',
       environmentalNote:
         'मौसम केवल पर्यावरणीय जानकारी है और रोग का निदान नहीं है।',
+      surveillanceTitle: 'निगरानी स्तर',
+      surveillanceDescription: 'प्रशासनिक स्तर के अनुसार पशु स्वास्थ्य गतिविधि देखें।',
+      district: 'जिला',
+      block: 'ब्लॉक',
+      village: 'गाँव',
+      allAreas: 'सभी क्षेत्र',
+      selectedArea: 'चयनित क्षेत्र',
+      surveillanceCases: 'मामले',
+      surveillanceHighRisk: 'उच्च जोखिम',
+      surveillanceHotspots: 'हॉटस्पॉट',
+      areaNote: 'वर्तमान क्षेत्र समूहिंग रिपोर्ट में उपलब्ध स्थान की जानकारी का उपयोग करती है।',
+      trendsTitle: 'ऐतिहासिक रोग रुझान',
+      trendsDescription: 'रिपोर्ट में उपलब्ध तिथियों के आधार पर समय के साथ मामलों की निगरानी करें।',
+      noTrendData: 'रुझान विश्लेषण के लिए कोई दिनांक वाली रिपोर्ट उपलब्ध नहीं है।',
+      cases: 'मामले',
+      mortality: 'मृत्यु',
+      highRiskCases: 'उच्च जोखिम मामले',
+      month: 'माह',
     },
 
     mr: {
@@ -190,6 +228,24 @@ function OutbreakMap({ language }) {
       weatherLoading: 'हवामान लोड होत आहे...',
       environmentalNote:
         'हवामान ही केवळ पर्यावरणीय माहिती आहे; हा रोगाचा निदान नाही.',
+      surveillanceTitle: 'निरीक्षण स्तर',
+      surveillanceDescription: 'प्रशासकीय स्तरानुसार पशुधन आरोग्य प्रकरणे पहा.',
+      district: 'जिल्हा',
+      block: 'ब्लॉक',
+      village: 'गाव',
+      allAreas: 'सर्व भाग',
+      selectedArea: 'निवडलेला भाग',
+      surveillanceCases: 'प्रकरणे',
+      surveillanceHighRisk: 'जास्त जोखीम',
+      surveillanceHotspots: 'हॉटस्पॉट',
+      areaNote: 'सध्याचे क्षेत्र गटिंग अहवालामध्ये उपलब्ध ठिकाणाच्या माहितीनुसार केले जाते.',
+      trendsTitle: 'ऐतिहासिक रोग कल',
+      trendsDescription: 'अहवालामधील उपलब्ध तारखांनुसार कालांतराने प्रकरणांचे निरीक्षण करा.',
+      noTrendData: 'कल विश्लेषणासाठी दिनांक असलेले कोणतेही अहवाल उपलब्ध नाहीत.',
+      cases: 'प्रकरणे',
+      mortality: 'मृत्यू',
+      highRiskCases: 'जास्त जोखीम प्रकरणे',
+      month: 'महिना',
     },
   }
 
@@ -370,11 +426,95 @@ function OutbreakMap({ language }) {
     }
   })
 
+  // Administrative surveillance grouping
+  // This first version uses the existing location text only.
+  // It does not change or require the backend schema.
+  const normalizeLocation = (value) =>
+    String(value || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+
+  const getLocationParts = (report) => {
+    const raw = normalizeLocation(report.location)
+
+    if (!raw) {
+      return {
+        village: 'Unknown',
+        block: 'Unknown',
+        district: 'Unknown',
+      }
+    }
+
+    const parts = raw
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+
+    // For locations such as "Village, Block, District", use the
+    // available parts. If fewer parts exist, keep them as Unknown.
+    return {
+      village: parts[0] || 'Unknown',
+      block: parts[1] || parts[0] || 'Unknown',
+      district: parts[2] || parts[1] || parts[0] || 'Unknown',
+    }
+  }
+
+  const surveillanceAreas = Array.from(
+    new Set(
+      reports
+        .map((report) => getLocationParts(report)[surveillanceLevel.toLowerCase()])
+        .filter(Boolean)
+    )
+  ).sort()
+
+  const surveillanceReports =
+    selectedSurveillanceArea === 'All'
+      ? reports
+      : reports.filter(
+          (report) =>
+            getLocationParts(report)[surveillanceLevel.toLowerCase()] ===
+            selectedSurveillanceArea
+        )
+
+  const surveillanceHighRiskCount = surveillanceReports.filter(
+    (report) => report.priority === 'High'
+  ).length
+
+  const surveillanceGPSReports = surveillanceReports.filter(
+    (report) =>
+      report.latitude != null &&
+      report.longitude != null &&
+      !Number.isNaN(Number(report.latitude)) &&
+      !Number.isNaN(Number(report.longitude))
+  )
+
+  // Hotspots that fall inside the selected surveillance area.
+  const surveillanceHotspotCount = hotspotAreas.filter((area) =>
+    surveillanceGPSReports.some(
+      (report) =>
+        calculateDistanceKm(
+          Number(report.latitude),
+          Number(report.longitude),
+          area.latitude,
+          area.longitude
+        ) <= HOTSPOT_RADIUS_KM
+    )
+  ).length
+
   // Filtered reports
+  const filteredSurveillanceGPSReports = gpsReports.filter((report) =>
+    selectedSurveillanceArea === 'All'
+      ? true
+      : getLocationParts(report)[surveillanceLevel.toLowerCase()] ===
+        selectedSurveillanceArea
+  )
+
   const filteredReports =
     riskFilter === 'All'
-      ? gpsReports
-      : gpsReports.filter((report) => report.priority === riskFilter)
+      ? filteredSurveillanceGPSReports
+      : filteredSurveillanceGPSReports.filter(
+          (report) => report.priority === riskFilter
+        )
 
   // Status translation
   const getStatusLabel = (status) => {
@@ -455,6 +595,60 @@ function OutbreakMap({ language }) {
     return 'bg-slate-800 text-white border-slate-800'
   }
 
+  // Historical disease trends
+  // The current reports API/file does not visibly define a single dedicated
+  // report-date field here, so support the date keys that may already be
+  // returned by the API without changing the backend.
+  const getReportDate = (report) =>
+    report.created_at ||
+    report.createdAt ||
+    report.report_date ||
+    report.reportDate ||
+    report.date ||
+    null
+
+  const monthlyTrendMap = {}
+
+  reports.forEach((report) => {
+    const rawDate = getReportDate(report)
+    if (!rawDate) return
+
+    const date = new Date(rawDate)
+    if (Number.isNaN(date.getTime())) return
+
+    const monthKey = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, '0')}`
+
+    if (!monthlyTrendMap[monthKey]) {
+      monthlyTrendMap[monthKey] = {
+        monthKey,
+        cases: 0,
+        highRisk: 0,
+        mortality: 0,
+      }
+    }
+
+    monthlyTrendMap[monthKey].cases += 1
+
+    if (report.priority === 'High') {
+      monthlyTrendMap[monthKey].highRisk += 1
+    }
+
+    if (report.report_type === 'mortality') {
+      monthlyTrendMap[monthKey].mortality += 1
+    }
+  })
+
+  const monthlyTrends = Object.values(monthlyTrendMap)
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
+    .slice(-6)
+
+  const maxTrendCases = Math.max(
+    1,
+    ...monthlyTrends.map((item) => item.cases)
+  )
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -520,6 +714,109 @@ function OutbreakMap({ language }) {
               {hotspotAreas.length}
             </p>
           </div>
+        </div>
+
+        {/* Administrative Surveillance */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 mb-6 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center text-2xl">
+                  🏛️
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    {t.surveillanceTitle}
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {t.surveillanceDescription}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {[
+                ['District', t.district],
+                ['Block', t.block],
+                ['Village', t.village],
+              ].map(([level, label]) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => {
+                    setSurveillanceLevel(level)
+                    setSelectedSurveillanceArea('All')
+                  }}
+                  className={`px-4 py-2 rounded-lg border text-xs font-bold transition ${
+                    surveillanceLevel === level
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 mb-2">
+                {t.selectedArea}
+              </label>
+              <select
+                value={selectedSurveillanceArea}
+                onChange={(event) =>
+                  setSelectedSurveillanceArea(event.target.value)
+                }
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-green-200"
+              >
+                <option value="All">{t.allAreas}</option>
+                {surveillanceAreas.map((area) => (
+                  <option key={area} value={area}>
+                    {area}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <p className="text-xs text-slate-500">{t.selectedArea}</p>
+              <p className="font-bold text-slate-900 mt-1">
+                {selectedSurveillanceArea === 'All'
+                  ? t.allAreas
+                  : selectedSurveillanceArea}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <p className="text-xs text-slate-500">{t.surveillanceCases}</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1">
+                {surveillanceReports.length}
+              </p>
+            </div>
+
+            <div className="bg-white border border-red-100 rounded-xl p-4">
+              <p className="text-xs text-slate-500">{t.surveillanceHighRisk}</p>
+              <p className="text-2xl font-bold text-red-600 mt-1">
+                {surveillanceHighRiskCount}
+              </p>
+            </div>
+
+            <div className="bg-white border border-purple-100 rounded-xl p-4">
+              <p className="text-xs text-slate-500">{t.surveillanceHotspots}</p>
+              <p className="text-2xl font-bold text-purple-600 mt-1">
+                {surveillanceHotspotCount}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-400 mt-4">
+            ℹ️ {t.areaNote}
+          </p>
         </div>
 
         {/* Weather */}
@@ -879,6 +1176,142 @@ function OutbreakMap({ language }) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Historical Trends */}
+        <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-2xl">
+                📈
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">
+                  {t.trendsTitle}
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  {t.trendsDescription}
+                </p>
+              </div>
+            </div>
+
+            {monthlyTrends.length > 0 && (
+              <div className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-600">
+                {monthlyTrends.length === 1
+                  ? 'Current reporting period'
+                  : `Last ${monthlyTrends.length} months`}
+              </div>
+            )}
+          </div>
+
+          {monthlyTrends.length === 0 ? (
+            <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center">
+              <div className="text-4xl mb-3">📊</div>
+              <p className="text-sm text-slate-500">{t.noTrendData}</p>
+            </div>
+          ) : monthlyTrends.length === 1 ? (
+            <>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide font-bold text-slate-400">
+                      {t.month}
+                    </p>
+                    <p className="text-lg font-bold text-slate-900 mt-1">
+                      {monthlyTrends[0].monthKey}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-slate-500">Reporting snapshot</p>
+                    <p className="text-sm font-semibold text-slate-700 mt-1">
+                      {monthlyTrends[0].cases} {t.cases}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-4">
+                    <p className="text-xs text-slate-500">{t.cases}</p>
+                    <p className="text-3xl font-bold text-slate-900 mt-1">
+                      {monthlyTrends[0].cases}
+                    </p>
+                  </div>
+
+                  <div className="bg-white border border-red-100 rounded-xl p-4">
+                    <p className="text-xs text-red-600">{t.highRiskCases}</p>
+                    <p className="text-3xl font-bold text-red-600 mt-1">
+                      {monthlyTrends[0].highRisk}
+                    </p>
+                  </div>
+
+                  <div className="bg-white border border-purple-100 rounded-xl p-4">
+                    <p className="text-xs text-purple-600">{t.mortality}</p>
+                    <p className="text-3xl font-bold text-purple-600 mt-1">
+                      {monthlyTrends[0].mortality}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-400 mt-4">
+                More monthly reporting data will populate the historical trend automatically.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <p className="text-xs text-slate-500">{t.cases}</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">
+                    {monthlyTrends.reduce((sum, item) => sum + item.cases, 0)}
+                  </p>
+                </div>
+
+                <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+                  <p className="text-xs text-red-600">{t.highRiskCases}</p>
+                  <p className="text-2xl font-bold text-red-600 mt-1">
+                    {monthlyTrends.reduce((sum, item) => sum + item.highRisk, 0)}
+                  </p>
+                </div>
+
+                <div className="bg-purple-50 border border-purple-100 rounded-xl p-4">
+                  <p className="text-xs text-purple-600">{t.mortality}</p>
+                  <p className="text-2xl font-bold text-purple-600 mt-1">
+                    {monthlyTrends.reduce((sum, item) => sum + item.mortality, 0)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-4 bg-slate-50 border-b border-slate-200 px-4 py-3 text-xs font-bold text-slate-500">
+                  <span>{t.month}</span>
+                  <span className="text-center">{t.cases}</span>
+                  <span className="text-center">{t.highRiskCases}</span>
+                  <span className="text-center">{t.mortality}</span>
+                </div>
+
+                {monthlyTrends.map((item) => (
+                  <div
+                    key={item.monthKey}
+                    className="grid grid-cols-4 px-4 py-3 border-b last:border-b-0 border-slate-100 text-sm"
+                  >
+                    <span className="font-semibold text-slate-700">
+                      {item.monthKey}
+                    </span>
+                    <span className="text-center font-bold text-slate-900">
+                      {item.cases}
+                    </span>
+                    <span className="text-center font-bold text-red-600">
+                      {item.highRisk}
+                    </span>
+                    <span className="text-center font-bold text-purple-600">
+                      {item.mortality}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Summary */}

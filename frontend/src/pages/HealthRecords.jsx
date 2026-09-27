@@ -40,6 +40,10 @@ function HealthRecords({ language }) {
       vaccinatedStatus: 'Vaccinated',
       notVaccinated: 'Not Vaccinated',
       pendingStatus: 'Pending',
+      dueSoon: 'Due Soon',
+      overdue: 'Overdue',
+      vaccinationDueDate: 'Vaccination Due Date',
+      saveDueDate: 'Save Due Date',
 
       low: 'LOW RISK',
       medium: 'MEDIUM RISK',
@@ -95,6 +99,10 @@ function HealthRecords({ language }) {
       vaccinatedStatus: 'टीका लगाया गया',
       notVaccinated: 'टीका नहीं लगाया गया',
       pendingStatus: 'लंबित',
+      dueSoon: 'जल्द देय',
+      overdue: 'अतिदेय',
+      vaccinationDueDate: 'टीकाकरण की नियत तारीख',
+      saveDueDate: 'नियत तारीख सहेजें',
 
       low: 'कम जोखिम',
       medium: 'मध्यम जोखिम',
@@ -150,6 +158,10 @@ function HealthRecords({ language }) {
       vaccinatedStatus: 'लसीकरण झाले',
       notVaccinated: 'लसीकरण झाले नाही',
       pendingStatus: 'प्रलंबित',
+      dueSoon: 'लवकर देय',
+      overdue: 'मुदत संपलेली',
+      vaccinationDueDate: 'लसीकरणाची नियोजित तारीख',
+      saveDueDate: 'नियोजित तारीख जतन करा',
 
       low: 'कमी जोखीम',
       medium: 'मध्यम जोखीम',
@@ -413,9 +425,20 @@ function HealthRecords({ language }) {
 
   const updateVaccination = (
     reportId,
-    value
-  ) => {fetch(
-  `${API_BASE_URL}/report/${reportId}/vaccination`,
+    value,
+    dueDate = undefined
+  ) => {
+    const currentReport = reports.find(
+      (item) => item.id === reportId
+    )
+
+    const finalDueDate =
+      dueDate !== undefined
+        ? dueDate
+        : currentReport?.vaccination_due_date || null
+
+    fetch(
+      `${API_BASE_URL}/report/${reportId}/vaccination`,
       {
         method: 'PUT',
         headers: {
@@ -423,6 +446,7 @@ function HealthRecords({ language }) {
         },
         body: JSON.stringify({
           vaccination_status: value,
+          vaccination_due_date: finalDueDate,
         }),
       }
     )
@@ -443,8 +467,9 @@ function HealthRecords({ language }) {
             item.id === reportId
               ? {
                   ...item,
-                  vaccination_status:
-                    value,
+                  vaccination_status: value,
+                  vaccination_due_date:
+                    finalDueDate,
                 }
               : item
           )
@@ -456,6 +481,78 @@ function HealthRecords({ language }) {
           error
         )
       })
+  }
+
+  const getVaccinationState = (report) => {
+    if (report.vaccination_status === 'Vaccinated') {
+      return {
+        label: t.vaccinatedStatus,
+        style: 'bg-green-50 text-green-700 border-green-300',
+      }
+    }
+
+    if (report.vaccination_due_date) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const dueDate = new Date(
+        `${report.vaccination_due_date}T00:00:00`
+      )
+
+      if (!Number.isNaN(dueDate.getTime())) {
+        const daysUntilDue =
+          Math.ceil(
+            (dueDate.getTime() - today.getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+
+        if (daysUntilDue < 0) {
+          return {
+            label: t.overdue,
+            style: 'bg-red-50 text-red-700 border-red-300',
+          }
+        }
+
+        if (daysUntilDue <= 7) {
+          return {
+            label: t.dueSoon,
+            style: 'bg-orange-50 text-orange-700 border-orange-300',
+          }
+        }
+      }
+    }
+
+    return {
+      label:
+        report.vaccination_status ||
+        t.notAvailable,
+      style: 'bg-slate-50 text-slate-700 border-slate-300',
+    }
+  }
+
+  const formatDateOnly = (dateValue) => {
+    if (!dateValue) return ''
+
+    const date = new Date(
+      `${dateValue}T00:00:00`
+    )
+
+    if (Number.isNaN(date.getTime())) {
+      return dateValue
+    }
+
+    return date.toLocaleDateString(
+      language === 'hi'
+        ? 'hi-IN'
+        : language === 'mr'
+        ? 'mr-IN'
+        : 'en-IN',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }
+    )
   }
 
   // ==========================================
@@ -475,6 +572,13 @@ function HealthRecords({ language }) {
     reports.filter(
       (report) =>
         report.status === 'Pending'
+    ).length
+
+  const overdueVaccinationRecords =
+    reports.filter(
+      (report) =>
+        getVaccinationState(report).label ===
+        t.overdue
     ).length
 
   return (
@@ -976,10 +1080,24 @@ function HealthRecords({ language }) {
                                 {t.vaccination}
                               </p>
 
-                              <p className="font-bold text-slate-800 mt-1">
-                                {report.vaccination_status ||
-                                  t.notAvailable}
-                              </p>
+                              <div className="flex flex-wrap items-center gap-2 mt-1">
+
+                                <p className="font-bold text-slate-800">
+                                  {getVaccinationState(report).label}
+                                </p>
+
+                                {report.vaccination_due_date &&
+                                  report.vaccination_status !== 'Vaccinated' && (
+                                    <span
+                                      className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                                        getVaccinationState(report).style
+                                      }`}
+                                    >
+                                      {getVaccinationState(report).label}
+                                    </span>
+                                  )}
+
+                              </div>
 
                             </div>
 
@@ -1016,6 +1134,55 @@ function HealthRecords({ language }) {
                             </option>
 
                           </select>
+
+                          <div className="mt-4">
+
+                            <label className="block text-xs font-semibold text-slate-500 mb-2">
+                              {t.vaccinationDueDate}
+                            </label>
+
+                            <input
+                              type="date"
+                              value={
+                                report.vaccination_due_date ||
+                                ''
+                              }
+                              onChange={(e) => {
+                                const newDate =
+                                  e.target.value
+
+                                setReports((currentReports) =>
+                                  currentReports.map((item) =>
+                                    item.id === report.id
+                                      ? {
+                                          ...item,
+                                          vaccination_due_date:
+                                            newDate,
+                                        }
+                                      : item
+                                  )
+                                )
+                              }}
+                              onBlur={(e) => {
+                                updateVaccination(
+                                  report.id,
+                                  report.vaccination_status ||
+                                    'Not Available',
+                                  e.target.value || null
+                                )
+                              }}
+                              className="w-full border-2 border-blue-200 rounded-xl px-3 py-2.5 bg-white text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+
+                            {report.vaccination_due_date && (
+                              <p className="text-xs text-slate-500 mt-2">
+                                📅 {formatDateOnly(
+                                  report.vaccination_due_date
+                                )}
+                              </p>
+                            )}
+
+                          </div>
 
                         </div>
 

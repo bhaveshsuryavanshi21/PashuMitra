@@ -6,6 +6,7 @@ function Alerts({ language }) {
   const [loading, setLoading] = useState(true)
 
   const previousHighRiskIds = useRef([])
+  const previousVaccinationAlertIds = useRef([])
 
   const translations = {
     en: {
@@ -18,6 +19,19 @@ function Alerts({ language }) {
       hotspotAlerts: 'Hotspot Alerts',
       pendingCases: 'Pending Cases',
       totalCases: 'Total Cases',
+      vaccinationAlerts: 'Vaccination Alerts',
+      overdueVaccinations: 'Overdue Vaccinations',
+      dueSoonVaccinations: 'Vaccinations Due Soon',
+      vaccinationDue: 'Vaccination Due',
+      overdue: 'OVERDUE',
+      dueSoon: 'DUE SOON',
+      dueDate: 'Due Date',
+      mortalityAlerts: 'Mortality Alerts',
+      mortalityReport: 'MORTALITY REPORT',
+      animalsDied: 'Animals Died',
+      deathDate: 'Date of Death',
+      suspectedCause: 'Suspected Cause',
+      mortalityAttention: 'Mortality report requires veterinary surveillance.',
 
       emergencyQueue: 'Emergency Response Queue',
       emergencyDescription:
@@ -76,6 +90,19 @@ function Alerts({ language }) {
       hotspotAlerts: 'हॉटस्पॉट अलर्ट',
       pendingCases: 'लंबित मामले',
       totalCases: 'कुल मामले',
+      vaccinationAlerts: 'टीकाकरण अलर्ट',
+      overdueVaccinations: 'अतिदेय टीकाकरण',
+      dueSoonVaccinations: 'जल्द देय टीकाकरण',
+      vaccinationDue: 'टीकाकरण देय',
+      overdue: 'अतिदेय',
+      dueSoon: 'जल्द देय',
+      dueDate: 'नियत तारीख',
+      mortalityAlerts: 'मृत्यु अलर्ट',
+      mortalityReport: 'मृत्यु रिपोर्ट',
+      animalsDied: 'मृत पशु',
+      deathDate: 'मृत्यु की तारीख',
+      suspectedCause: 'संदिग्ध कारण',
+      mortalityAttention: 'मृत्यु रिपोर्ट के लिए पशु चिकित्सा निगरानी आवश्यक है।',
 
       emergencyQueue: 'आपातकालीन प्रतिक्रिया सूची',
       emergencyDescription:
@@ -135,6 +162,19 @@ function Alerts({ language }) {
       hotspotAlerts: 'हॉटस्पॉट अलर्ट',
       pendingCases: 'प्रलंबित प्रकरणे',
       totalCases: 'एकूण प्रकरणे',
+      vaccinationAlerts: 'लसीकरण अलर्ट',
+      overdueVaccinations: 'मुदत संपलेले लसीकरण',
+      dueSoonVaccinations: 'लवकर देय लसीकरण',
+      vaccinationDue: 'लसीकरण देय',
+      overdue: 'मुदत संपलेले',
+      dueSoon: 'लवकर देय',
+      dueDate: 'नियोजित तारीख',
+      mortalityAlerts: 'मृत्यू अलर्ट',
+      mortalityReport: 'मृत्यू अहवाल',
+      animalsDied: 'मृत प्राणी',
+      deathDate: 'मृत्यूची तारीख',
+      suspectedCause: 'संशयित कारण',
+      mortalityAttention: 'मृत्यू अहवालासाठी पशुवैद्यकीय निरीक्षण आवश्यक आहे.',
 
       emergencyQueue: 'आपत्कालीन प्रतिसाद यादी',
       emergencyDescription:
@@ -188,6 +228,74 @@ function Alerts({ language }) {
   const t = translations[language] || translations.en
 
   // ==========================================
+  // ALERT HELPERS
+  // ==========================================
+
+  const getVaccinationAlert = (report) => {
+    if (
+      report.vaccination_status === 'Vaccinated' ||
+      !report.vaccination_due_date
+    ) {
+      return null
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const dueDate = new Date(
+      `${report.vaccination_due_date}T00:00:00`
+    )
+
+    if (Number.isNaN(dueDate.getTime())) return null
+
+    const daysUntilDue = Math.ceil(
+      (dueDate.getTime() - today.getTime()) /
+        (1000 * 60 * 60 * 24)
+    )
+
+    if (daysUntilDue < 0) return 'overdue'
+    if (daysUntilDue <= 7) return 'dueSoon'
+
+    return null
+  }
+
+  const getVaccinationAlertStyle = (type) => {
+    if (type === 'overdue') {
+      return {
+        badge: 'bg-red-100 text-red-700 border-red-200',
+        border: 'border-red-200',
+        header: 'bg-red-50',
+      }
+    }
+
+    return {
+      badge: 'bg-orange-100 text-orange-700 border-orange-200',
+      border: 'border-orange-200',
+      header: 'bg-orange-50',
+    }
+  }
+
+  const formatDueDate = (dateValue) => {
+    if (!dateValue) return ''
+
+    const date = new Date(`${dateValue}T00:00:00`)
+    if (Number.isNaN(date.getTime())) return dateValue
+
+    const locale =
+      language === 'hi'
+        ? 'hi-IN'
+        : language === 'mr'
+        ? 'mr-IN'
+        : 'en-IN'
+
+    return date.toLocaleDateString(locale, {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  // ==========================================
   // FETCH REPORTS + NOTIFICATIONS
   // ==========================================
 
@@ -219,19 +327,54 @@ function Alerts({ language }) {
               !previousHighRiskIds.current.includes(report.id)
           )
 
+          const currentVaccinationAlertIds = data
+            .filter((report) => getVaccinationAlert(report))
+            .map(
+              (report) =>
+                `${report.id}-${getVaccinationAlert(report)}`
+            )
+
+          const newVaccinationAlerts = data.filter((report) => {
+            const alertType = getVaccinationAlert(report)
+
+            return (
+              alertType &&
+              !previousVaccinationAlertIds.current.includes(
+                `${report.id}-${alertType}`
+              )
+            )
+          })
+
           if (
             'Notification' in window &&
-            Notification.permission === 'granted' &&
-            previousHighRiskIds.current.length > 0
+            Notification.permission === 'granted'
           ) {
-            newHighRiskReports.forEach((report) => {
-              new Notification(t.notificationTitle, {
-                body: `${report.animal_type} - ${t.notificationBody}`,
+            if (previousHighRiskIds.current.length > 0) {
+              newHighRiskReports.forEach((report) => {
+                new Notification(t.notificationTitle, {
+                  body: `${report.animal_type} - ${t.notificationBody}`,
+                })
               })
-            })
+            }
+
+            if (previousVaccinationAlertIds.current.length > 0) {
+              newVaccinationAlerts.forEach((report) => {
+                const alertType = getVaccinationAlert(report)
+
+                new Notification(t.vaccinationAlerts, {
+                  body: `${report.animal_type} - ${
+                    alertType === 'overdue' ? t.overdue : t.dueSoon
+                  } - ${t.dueDate}: ${formatDueDate(
+                    report.vaccination_due_date
+                  )}`,
+                })
+              })
+            }
           }
 
           previousHighRiskIds.current = currentHighRiskIds
+          previousVaccinationAlertIds.current =
+            currentVaccinationAlertIds
 
           setReports(data)
           setLoading(false)
@@ -260,6 +403,26 @@ function Alerts({ language }) {
 
   const pendingReports = reports.filter(
     (report) => report.status === 'Pending'
+  )
+
+  const vaccinationAlertReports = reports.filter(
+    (report) => getVaccinationAlert(report)
+  )
+
+  const overdueVaccinationReports =
+    vaccinationAlertReports.filter(
+      (report) => getVaccinationAlert(report) === 'overdue'
+    )
+
+  const dueSoonVaccinationReports =
+    vaccinationAlertReports.filter(
+      (report) => getVaccinationAlert(report) === 'dueSoon'
+    )
+
+  const mortalityReports = reports.filter(
+    (report) =>
+      report.report_type === 'mortality' &&
+      report.status !== 'Resolved'
   )
 
   // ==========================================
@@ -484,7 +647,7 @@ function Alerts({ language }) {
             OVERVIEW STRIP
         ===================================== */}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-10">
 
           {/* HIGH RISK */}
 
@@ -569,6 +732,46 @@ function Alerts({ language }) {
               <span className="text-2xl">
                 📋
               </span>
+
+            </div>
+
+          </div>
+
+          {/* VACCINATION ALERTS */}
+
+          <div className="bg-white border-l-4 border-blue-500 rounded-2xl shadow-sm p-5">
+
+            <p className="text-sm text-slate-500 font-medium">
+              {t.vaccinationAlerts}
+            </p>
+
+            <div className="flex items-end justify-between mt-2">
+
+              <p className="text-4xl font-bold text-blue-600">
+                {vaccinationAlertReports.length}
+              </p>
+
+              <span className="text-2xl">💉</span>
+
+            </div>
+
+          </div>
+
+          {/* MORTALITY ALERTS */}
+
+          <div className="bg-white border-l-4 border-red-700 rounded-2xl shadow-sm p-5">
+
+            <p className="text-sm text-slate-500 font-medium">
+              {t.mortalityAlerts}
+            </p>
+
+            <div className="flex items-end justify-between mt-2">
+
+              <p className="text-4xl font-bold text-red-700">
+                {mortalityReports.length}
+              </p>
+
+              <span className="text-2xl">☠️</span>
 
             </div>
 
@@ -890,6 +1093,291 @@ function Alerts({ language }) {
 
             </div>
 
+          )}
+
+        </section>
+
+        {/* =====================================
+            VACCINATION ALERTS
+        ===================================== */}
+
+        <section className="mb-12">
+
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                  💉
+                </div>
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {t.vaccinationAlerts}
+                </h2>
+              </div>
+
+              <p className="text-slate-500 mt-2 ml-13">
+                {t.vaccinationDue}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <span className="bg-red-50 text-red-700 border border-red-200 px-3 py-2 rounded-xl text-sm font-bold">
+                {overdueVaccinationReports.length} {t.overdueVaccinations}
+              </span>
+              <span className="bg-orange-50 text-orange-700 border border-orange-200 px-3 py-2 rounded-xl text-sm font-bold">
+                {dueSoonVaccinationReports.length} {t.dueSoonVaccinations}
+              </span>
+            </div>
+
+          </div>
+
+          {vaccinationAlertReports.length === 0 ? (
+
+            <div className="bg-green-50 border border-green-200 rounded-3xl p-8 text-center">
+              <div className="text-4xl mb-2">✅</div>
+              <p className="text-green-700 font-semibold">
+                {language === 'hi'
+                  ? 'कोई टीकाकरण अलर्ट नहीं मिला।'
+                  : language === 'mr'
+                  ? 'कोणतेही लसीकरण अलर्ट आढळले नाही.'
+                  : 'No vaccination alerts detected.'}
+              </p>
+            </div>
+
+          ) : (
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+              {vaccinationAlertReports.map((report) => {
+
+                const alertType = getVaccinationAlert(report)
+                const alertStyle = getVaccinationAlertStyle(alertType)
+
+                return (
+                  <div
+                    key={`vaccination-${report.id}`}
+                    className={`bg-white rounded-3xl border shadow-md overflow-hidden ${alertStyle.border}`}
+                  >
+
+                    <div className={`${alertStyle.header} border-b px-5 py-4`}>
+
+                      <div className="flex items-center justify-between gap-3">
+
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xl">
+                            {getAnimalIcon(report.animal_type)}
+                          </div>
+
+                          <div>
+                            <h3 className="font-bold text-slate-800 capitalize">
+                              {report.animal_type}
+                            </h3>
+                            <p className="text-xs text-slate-500">
+                              {t.caseId} #PM-
+                              {String(report.id).padStart(4, '0')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-extrabold border ${alertStyle.badge}`}>
+                          {alertType === 'overdue' ? t.overdue : t.dueSoon}
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                    <div className="p-5">
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                          <p className="text-xs text-slate-500">
+                            💉 {t.vaccination}
+                          </p>
+                          <p className="font-bold text-slate-800 mt-1">
+                            {report.vaccination_status || t.pending}
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                          <p className="text-xs text-slate-500">
+                            📅 {t.dueDate}
+                          </p>
+                          <p className="font-bold text-slate-800 mt-1">
+                            {formatDueDate(report.vaccination_due_date)}
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <div className={`mt-4 rounded-2xl p-4 border ${alertStyle.border} ${alertStyle.header}`}>
+                        <p className={`text-sm font-bold ${
+                          alertType === 'overdue'
+                            ? 'text-red-700'
+                            : 'text-orange-700'
+                        }`}>
+                          {alertType === 'overdue'
+                            ? `🚨 ${t.overdue}`
+                            : `⚠️ ${t.dueSoon}`}
+                        </p>
+                      </div>
+
+                    </div>
+
+                  </div>
+                )
+              })}
+
+            </div>
+          )}
+
+        </section>
+
+        {/* =====================================
+            MORTALITY ALERTS
+        ===================================== */}
+
+        <section className="mb-12">
+
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                  ☠️
+                </div>
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {t.mortalityAlerts}
+                </h2>
+              </div>
+
+              <p className="text-slate-500 mt-2 ml-13">
+                {t.mortalityAttention}
+              </p>
+            </div>
+
+            <div className="bg-red-50 text-red-700 border border-red-200 px-4 py-2 rounded-xl text-sm font-bold w-fit">
+              {mortalityReports.length} {t.mortalityAlerts}
+            </div>
+          </div>
+
+          {mortalityReports.length === 0 ? (
+
+            <div className="bg-green-50 border border-green-200 rounded-3xl p-8 text-center">
+              <div className="text-4xl mb-2">✅</div>
+              <p className="text-green-700 font-semibold">
+                {language === 'hi'
+                  ? 'कोई सक्रिय मृत्यु अलर्ट नहीं है।'
+                  : language === 'mr'
+                  ? 'कोणतेही सक्रिय मृत्यू अलर्ट नाहीत.'
+                  : 'No active mortality alerts.'}
+              </p>
+            </div>
+
+          ) : (
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+              {mortalityReports.map((report) => (
+
+                <div
+                  key={`mortality-${report.id}`}
+                  className="bg-white rounded-3xl border border-red-200 shadow-md overflow-hidden"
+                >
+
+                  <div className="bg-red-50 border-b border-red-100 px-5 py-4">
+
+                    <div className="flex items-center justify-between gap-3">
+
+                      <div className="flex items-center gap-3">
+
+                        <div className="w-11 h-11 rounded-xl bg-red-100 flex items-center justify-center text-xl">
+                          🚨
+                        </div>
+
+                        <div>
+                          <h3 className="font-bold text-red-700">
+                            {t.mortalityReport}
+                          </h3>
+                          <p className="text-xs text-slate-500">
+                            {t.caseId} #PM-
+                            {String(report.id).padStart(4, '0')}
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <span className="bg-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold">
+                        {t.highRisk}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                  <div className="p-5">
+
+                    <div className="flex items-center gap-3 mb-5">
+
+                      <div className="text-4xl">
+                        {getAnimalIcon(report.animal_type)}
+                      </div>
+
+                      <div>
+                        <p className="text-xl font-bold text-slate-800 capitalize">
+                          {report.animal_type}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {report.location || t.locationUnavailable}
+                        </p>
+                      </div>
+
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                        <p className="text-xs text-slate-500">
+                          ☠️ {t.animalsDied}
+                        </p>
+                        <p className="font-bold text-slate-800 mt-1">
+                          {report.death_count || '—'}
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                        <p className="text-xs text-slate-500">
+                          📅 {t.deathDate}
+                        </p>
+                        <p className="font-bold text-slate-800 mt-1">
+                          {formatDueDate(report.death_date) || '—'}
+                        </p>
+                      </div>
+
+                    </div>
+
+                    <div className="mt-4 bg-red-50 rounded-2xl p-4 border border-red-100">
+                      <p className="text-xs text-red-600 font-bold">
+                        {t.suspectedCause}
+                      </p>
+                      <p className="text-sm text-slate-700 mt-1">
+                        {report.suspected_cause || t.locationUnavailable}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 bg-red-50 border border-red-100 rounded-2xl p-4">
+                      <p className="text-red-700 text-sm font-bold">
+                        🚨 {t.mortalityAttention}
+                      </p>
+                    </div>
+
+                  </div>
+
+                </div>
+              ))}
+
+            </div>
           )}
 
         </section>

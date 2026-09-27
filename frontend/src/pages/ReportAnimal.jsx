@@ -17,6 +17,21 @@ function ReportAnimal({ language }) {
         'Report symptoms and location to get an AI-assisted risk assessment.',
 
       animalType: 'Animal Type',
+      reportType: 'Report Type',
+healthIssue: 'Health Issue',
+mortality: 'Animal Mortality',
+      deathsCount: 'Number of Animals Died',
+      deathDate: 'Date of Death',
+      deathTime: 'Approximate Time of Death',
+      suspectedCause: 'Suspected Cause',
+      suddenDeath: 'Sudden Death',
+      diseaseCause: 'Disease / Sickness',
+      poisoning: 'Poisoning',
+      injury: 'Injury / Accident',
+      unknownCause: 'Unknown',
+      otherCause: 'Other',
+      notes: 'Additional Notes',
+      mortalityLocationHelp: 'Location is required for mortality surveillance.',
 
       animalAge: 'Animal Age',
 
@@ -139,6 +154,21 @@ function ReportAnimal({ language }) {
         'लक्षण और स्थान दर्ज करें ताकि AI-सहायता प्राप्त जोखिम आकलन किया जा सके।',
 
       animalType: 'पशु का प्रकार',
+      reportType: 'रिपोर्ट का प्रकार',
+healthIssue: 'स्वास्थ्य समस्या',
+mortality: 'पशु मृत्यु',
+      deathsCount: 'मृत पशुओं की संख्या',
+      deathDate: 'मृत्यु की तारीख',
+      deathTime: 'मृत्यु का अनुमानित समय',
+      suspectedCause: 'संभावित कारण',
+      suddenDeath: 'अचानक मृत्यु',
+      diseaseCause: 'बीमारी / अस्वस्थता',
+      poisoning: 'विषाक्तता',
+      injury: 'चोट / दुर्घटना',
+      unknownCause: 'अज्ञात',
+      otherCause: 'अन्य',
+      notes: 'अतिरिक्त जानकारी',
+      mortalityLocationHelp: 'मृत्यु की निगरानी के लिए स्थान आवश्यक है।',
 
       animalAge: 'पशु की उम्र',
 
@@ -261,6 +291,21 @@ function ReportAnimal({ language }) {
         'लक्षणे आणि ठिकाण नोंदवा आणि AI-सहाय्यित जोखीम मूल्यांकन मिळवा.',
 
       animalType: 'प्राण्याचा प्रकार',
+      reportType: 'अहवालाचा प्रकार',
+healthIssue: 'आरोग्य समस्या',
+mortality: 'प्राण्याचा मृत्यू',
+      deathsCount: 'मृत प्राण्यांची संख्या',
+      deathDate: 'मृत्यूची तारीख',
+      deathTime: 'मृत्यूची अंदाजे वेळ',
+      suspectedCause: 'संशयित कारण',
+      suddenDeath: 'अचानक मृत्यू',
+      diseaseCause: 'रोग / आजार',
+      poisoning: 'विषबाधा',
+      injury: 'दुखापत / अपघात',
+      unknownCause: 'अज्ञात',
+      otherCause: 'इतर',
+      notes: 'अतिरिक्त माहिती',
+      mortalityLocationHelp: 'मृत्यूच्या देखरेखीसाठी ठिकाण आवश्यक आहे.',
 
       animalAge: 'प्राण्याचे वय',
 
@@ -381,12 +426,20 @@ function ReportAnimal({ language }) {
 
 
   const [animalType, setAnimalType] = useState('')
+  const [reportType, setReportType] = useState('health_issue')
 
   const [animalAge, setAnimalAge] = useState('')
 
   const [symptoms, setSymptoms] = useState([])
 
   const [location, setLocation] = useState('')
+
+  // Mortality-specific fields
+  const [deathCount, setDeathCount] = useState('')
+  const [deathDate, setDeathDate] = useState('')
+  const [deathTime, setDeathTime] = useState('')
+  const [suspectedCause, setSuspectedCause] = useState('')
+  const [additionalNotes, setAdditionalNotes] = useState('')
 
   const [message, setMessage] = useState('')
 
@@ -707,28 +760,28 @@ function ReportAnimal({ language }) {
 
 
   const handleSubmit = async () => {
-
-    if (!animalType || !animalAge || symptoms.length === 0) {
-
+    if (
+      !animalType ||
+      (reportType === 'health_issue' &&
+        (!animalAge || symptoms.length === 0)) ||
+      (reportType === 'mortality' &&
+        (!deathCount || !deathDate || (!location && (latitude === null || longitude === null))))
+    ) {
       setMessage(
-
         language === 'hi'
-
-          ? 'कृपया पशु, उम्र और कम से कम एक लक्षण चुनें।'
-
+          ? reportType === 'mortality'
+            ? 'कृपया पशु, मृत पशुओं की संख्या और मृत्यु की तारीख दर्ज करें। स्थान लिखें या GPS स्थान लें।'
+            : 'कृपया पशु, उम्र और कम से कम एक लक्षण चुनें।'
           : language === 'mr'
-
-          ? 'कृपया प्राणी, वय आणि किमान एक लक्षण निवडा.'
-
+          ? reportType === 'mortality'
+            ? 'कृपया प्राणी, मृत प्राण्यांची संख्या आणि मृत्यूची तारीख नोंदवा. ठिकाण लिहा किंवा GPS ठिकाण घ्या.'
+            : 'कृपया प्राणी, वय आणि किमान एक लक्षण निवडा.'
+          : reportType === 'mortality'
+          ? 'Please enter animal, number of deaths, and date of death. Add a location or use your current GPS location.'
           : 'Please select animal, age, and at least one symptom.'
-
       )
-
       return
-
     }
-
-
 
     const report = {
 
@@ -743,6 +796,18 @@ function ReportAnimal({ language }) {
       latitude,
 
       longitude,
+
+      reportType,
+
+      deathCount: reportType === 'mortality' ? deathCount : null,
+
+      deathDate: reportType === 'mortality' ? deathDate : null,
+
+      deathTime: reportType === 'mortality' ? deathTime : null,
+
+      suspectedCause: reportType === 'mortality' ? suspectedCause : null,
+
+      additionalNotes: reportType === 'mortality' ? additionalNotes : null,
 
     }
 
@@ -1195,7 +1260,53 @@ function ReportAnimal({ language }) {
 
             <div className="space-y-7 p-5 md:p-7">
 
-              {/* Animal type */}
+              {/* Report type */}
+<section>
+  <label className="mb-3 block text-sm font-semibold text-slate-900">
+    {t.reportType}
+  </label>
+
+  <div className="grid gap-3 sm:grid-cols-2">
+    <button
+      type="button"
+      onClick={() => setReportType('health_issue')}
+      className={`rounded-xl border p-4 text-left transition ${
+        reportType === 'health_issue'
+          ? 'border-green-600 bg-green-50 ring-1 ring-green-600'
+          : 'border-slate-200 bg-white hover:border-green-300 hover:bg-slate-50'
+      }`}
+    >
+      <div className="text-lg font-semibold text-slate-800">
+        🩺 {t.healthIssue}
+      </div>
+
+      <div className="mt-1 text-xs text-slate-500">
+        Report an animal showing health problems or symptoms.
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setReportType('mortality')}
+      className={`rounded-xl border p-4 text-left transition ${
+        reportType === 'mortality'
+          ? 'border-red-500 bg-red-50 ring-1 ring-red-500'
+          : 'border-slate-200 bg-white hover:border-red-300 hover:bg-slate-50'
+      }`}
+    >
+      <div className="text-lg font-semibold text-slate-800">
+        ⚠️ {t.mortality}
+      </div>
+
+      <div className="mt-1 text-xs text-slate-500">
+        Report an animal death for surveillance and outbreak monitoring.
+      </div>
+    </button>
+  </div>
+</section>
+
+{/* Animal type */}
+              
               <section>
                 <div className="mb-3">
                   <p className="text-sm font-semibold text-slate-900">
@@ -1245,71 +1356,169 @@ function ReportAnimal({ language }) {
                 </div>
               </section>
 
-              {/* Animal age */}
-              <section>
-                <label className="mb-2 block text-sm font-semibold text-slate-900">
-                  {t.animalAge}
-                </label>
+              {/* Health issue fields OR mortality fields */}
+              {reportType === 'health_issue' ? (
+                <>
+                  {/* Animal age */}
+                  <section>
+                    <label className="mb-2 block text-sm font-semibold text-slate-900">
+                      {t.animalAge}
+                    </label>
 
-                <input
-                  type="number"
-                  min="0"
-                  value={animalAge}
-                  onChange={(e) => setAnimalAge(e.target.value)}
-                  placeholder={t.agePlaceholder}
-                  className="w-full max-w-sm rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-50"
-                />
-              </section>
+                    <input
+                      type="number"
+                      min="0"
+                      value={animalAge}
+                      onChange={(e) => setAnimalAge(e.target.value)}
+                      placeholder={t.agePlaceholder}
+                      className="w-full max-w-sm rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-50"
+                    />
+                  </section>
 
-              {/* Symptoms */}
-              <section>
-                <div className="mb-3">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {t.symptoms}
-                  </p>
+                  {/* Symptoms */}
+                  <section>
+                    <div className="mb-3">
+                      <p className="text-sm font-semibold text-slate-900">{t.symptoms}</p>
+                      <p className="text-xs text-slate-500">Select all symptoms you have observed.</p>
+                    </div>
 
-                  <p className="text-xs text-slate-500">
-                    Select all symptoms you have observed.
-                  </p>
-                </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {symptomCards.map((symptom) => {
+                        const selected = symptoms.includes(symptom.value)
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {symptomCards.map((symptom) => {
-                    const selected = symptoms.includes(symptom.value)
+                        return (
+                          <button
+                            key={symptom.value}
+                            type="button"
+                            onClick={() => toggleSymptom(symptom.value)}
+                            className={`flex items-center gap-3 rounded-xl border p-4 text-left transition ${
+                              selected
+                                ? 'border-green-600 bg-green-50'
+                                : 'border-slate-200 bg-white hover:border-green-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xl">
+                              {symptom.icon}
+                            </span>
+                            <span className="flex-1 text-sm font-medium text-slate-800">{symptom.label}</span>
+                            <span
+                              className={`flex h-5 w-5 items-center justify-center rounded-full border text-xs ${
+                                selected
+                                  ? 'border-green-600 bg-green-600 text-white'
+                                  : 'border-slate-300 text-transparent'
+                              }`}
+                            >
+                              ✓
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </section>
+                </>
+              ) : (
+                <section className="rounded-2xl border border-red-100 bg-red-50/50 p-5">
+                  <div className="mb-4">
+                    <p className="text-sm font-bold text-slate-900">Mortality details</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Record the death event for veterinary investigation and outbreak surveillance.
+                    </p>
+                  </div>
 
-                    return (
-                      <button
-                        key={symptom.value}
-                        type="button"
-                        onClick={() => toggleSymptom(symptom.value)}
-                        className={`flex items-center gap-3 rounded-xl border p-4 text-left transition ${
-                          selected
-                            ? 'border-green-600 bg-green-50'
-                            : 'border-slate-200 bg-white hover:border-green-300 hover:bg-slate-50'
-                        }`}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-900">{t.deathsCount}</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={deathCount}
+                        onChange={(e) => setDeathCount(e.target.value)}
+                        placeholder="e.g. 2"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-4 focus:ring-red-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-900">{t.deathDate}</label>
+                      <input
+                        type="date"
+                        value={deathDate}
+                        onChange={(e) => setDeathDate(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-4 focus:ring-red-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-900">{t.deathTime}</label>
+                      <input
+                        type="time"
+                        value={deathTime}
+                        onChange={(e) => setDeathTime(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-4 focus:ring-red-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-900">{t.suspectedCause}</label>
+                      <select
+                        value={suspectedCause}
+                        onChange={(e) => setSuspectedCause(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-red-500 focus:ring-4 focus:ring-red-50"
                       >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xl">
-                          {symptom.icon}
-                        </span>
+                        <option value="">Select cause</option>
+                        <option value="sudden_death">{t.suddenDeath}</option>
+                        <option value="disease">{t.diseaseCause}</option>
+                        <option value="poisoning">{t.poisoning}</option>
+                        <option value="injury">{t.injury}</option>
+                        <option value="unknown">{t.unknownCause}</option>
+                        <option value="other">{t.otherCause}</option>
+                      </select>
+                    </div>
+                  </div>
 
-                        <span className="flex-1 text-sm font-medium text-slate-800">
-                          {symptom.label}
-                        </span>
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm font-semibold text-slate-900">
+                      Symptoms observed before death <span className="font-normal text-slate-400">(optional)</span>
+                    </label>
 
-                        <span
-                          className={`flex h-5 w-5 items-center justify-center rounded-full border text-xs ${
-                            selected
-                              ? 'border-green-600 bg-green-600 text-white'
-                              : 'border-slate-300 text-transparent'
-                          }`}
-                        >
-                          ✓
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </section>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {symptomCards.map((symptom) => {
+                        const selected = symptoms.includes(symptom.value)
+
+                        return (
+                          <button
+                            key={symptom.value}
+                            type="button"
+                            onClick={() => toggleSymptom(symptom.value)}
+                            className={`flex items-center gap-3 rounded-xl border p-3 text-left transition ${
+                              selected
+                                ? 'border-red-400 bg-white ring-1 ring-red-300'
+                                : 'border-slate-200 bg-white hover:border-red-300'
+                            }`}
+                          >
+                            <span className="text-lg">{symptom.icon}</span>
+                            <span className="flex-1 text-sm font-medium text-slate-800">{symptom.label}</span>
+                            {selected && <span className="text-sm font-bold text-red-600">✓</span>}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm font-semibold text-slate-900">
+                      {t.notes} <span className="font-normal text-slate-400">(optional)</span>
+                    </label>
+                    <textarea
+                      rows="3"
+                      value={additionalNotes}
+                      onChange={(e) => setAdditionalNotes(e.target.value)}
+                      placeholder="Describe anything unusual noticed before or around the death..."
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-500 focus:ring-4 focus:ring-red-50"
+                    />
+                  </div>
+                </section>
+              )}
 
               {/* Location */}
               <section>
@@ -1431,12 +1640,20 @@ function ReportAnimal({ language }) {
               </p>
 
               <div className="mt-5 space-y-3">
-                {[
-                  ['01', 'Animal details'],
-                  ['02', 'Observed symptoms'],
-                  ['03', 'Location & voice'],
-                  ['04', 'Risk assessment'],
-                ].map(([number, label]) => (
+                {(reportType === 'mortality'
+                  ? [
+                      ['01', 'Animal details'],
+                      ['02', 'Death event details'],
+                      ['03', 'Location & voice'],
+                      ['04', 'Surveillance priority'],
+                    ]
+                  : [
+                      ['01', 'Animal details'],
+                      ['02', 'Observed symptoms'],
+                      ['03', 'Location & voice'],
+                      ['04', 'Risk assessment'],
+                    ]
+                ).map(([number, label]) => (
                   <div key={number} className="flex items-center gap-3">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-xs font-bold text-green-700">
                       {number}
